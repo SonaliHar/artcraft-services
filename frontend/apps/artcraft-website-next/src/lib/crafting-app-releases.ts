@@ -106,18 +106,18 @@ export const CRAFT_RELEASE_ASSETS: readonly CraftReleaseAsset[] = [
     arch: "aarch64",
   },
   {
-    file: "{slug}-{version}-linux-x86_64.AppImage",
-    group: "Linux",
-    label: "AppImage (x86_64)",
-    description: "Any distro. Mark it executable and run.",
-    arch: "x86_64",
-    recommended: true,
-  },
-  {
     file: "{slug}-{version}-linux-x86_64.flatpak",
     group: "Linux",
     label: "Flatpak (x86_64)",
     description: "Sandboxed. Install with flatpak install --user.",
+    arch: "x86_64",
+    recommended: true,
+  },
+  {
+    file: "{slug}-{version}-linux-x86_64.AppImage",
+    group: "Linux",
+    label: "AppImage (x86_64)",
+    description: "Any distro. Mark it executable and run.",
     arch: "x86_64",
   },
   {
@@ -142,18 +142,18 @@ export const CRAFT_RELEASE_ASSETS: readonly CraftReleaseAsset[] = [
     arch: "x86_64",
   },
   {
-    file: "{slug}-{version}-linux-aarch64.AppImage",
-    group: "Linux",
-    label: "AppImage (ARM64)",
-    description: "Any distro on 64-bit ARM.",
-    arch: "aarch64",
-    recommended: true,
-  },
-  {
     file: "{slug}-{version}-linux-aarch64.flatpak",
     group: "Linux",
     label: "Flatpak (ARM64)",
     description: "Sandboxed, on 64-bit ARM.",
+    arch: "aarch64",
+    recommended: true,
+  },
+  {
+    file: "{slug}-{version}-linux-aarch64.AppImage",
+    group: "Linux",
+    label: "AppImage (ARM64)",
+    description: "Any distro on 64-bit ARM.",
     arch: "aarch64",
   },
   {

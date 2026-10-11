@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AppleIcon,
   ArrowDownIcon,
   ArrowDownToLineIcon,
+  ChevronDownIcon,
   SquareTerminalIcon,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { WindowsIcon } from "@/components/icons";
 import { Button, type ButtonProps } from "@/components/ui";
+import { craftLauncherDownloads } from "@/lib/craft-launcher";
 import {
   CRAFT_DESKTOP_PLATFORMS,
   type CraftDesktopPlatform,
@@ -161,9 +163,14 @@ export function AppHeroDownloadButton({
  * ArtCraft Launcher's CTA: a direct download for the visitor's system once
  * it is known (with the file's platform and build underneath), else a jump
  * to `fallbackHref`, where every platform is listed.
+ *
+ * On Linux, offers Flatpak as the default button action, plus a dropdown
+ * arrow on the right to select and download other formats: Flatpak first,
+ * then AppImage, then deb, then rpm.
  */
 export function LauncherDownloadButton({
   recommended,
+  allDownloads,
   fallbackHref,
   size = "lg",
   variant = "primary",
@@ -171,6 +178,7 @@ export function LauncherDownloadButton({
   className,
 }: {
   recommended: CraftDownload[];
+  allDownloads?: CraftDownload[];
   fallbackHref: string;
   size?: ButtonProps["size"];
   variant?: ButtonProps["variant"];
@@ -179,6 +187,158 @@ export function LauncherDownloadButton({
 }) {
   const detected = useDetectedDesktop();
   const mine = detected && pickDownload(recommended, detected);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [selectedDownload, setSelectedDownload] = useState<CraftDownload | null>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const isLinux = detected?.platform === "Linux";
+  const downloads = allDownloads ?? (isLinux ? craftLauncherDownloads() : []);
+  const linuxDownloads = isLinux
+    ? downloads.filter(
+        (download) =>
+          download.group === "Linux" &&
+          (!detected.arch || !download.arch || download.arch === detected.arch),
+      )
+    : [];
+
+  const linuxOptions = isLinux
+    ? [...linuxDownloads].sort(
+        (a, b) => linuxFormatPriority(a.fileName) - linuxFormatPriority(b.fileName),
+      )
+    : [];
+
+  const defaultLinuxDownload =
+    linuxOptions.find((d) => d.fileName.endsWith(".flatpak")) ?? mine;
+  const activeDownload = selectedDownload ?? defaultLinuxDownload ?? mine;
+
+  if (isLinux && linuxOptions.length > 0 && activeDownload) {
+    const isPrimary = variant === "primary";
+    return (
+      <span className={twMerge("flex flex-col gap-2", className)}>
+        <div
+          ref={menuRef}
+          className={twMerge("relative inline-flex items-stretch", fullWidth ? "w-full" : "w-fit")}
+        >
+          <Button
+            href={activeDownload.href}
+            size={size}
+            variant={variant}
+            className={twMerge(
+              fullWidth ? "flex-1 w-full" : undefined,
+              "pr-4",
+            )}
+          >
+            <ArrowDownToLineIcon aria-hidden className="h-4 w-4" />
+            Download Launcher
+          </Button>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-label="Other Linux download formats"
+            className={twMerge(
+              "flex items-center justify-center transition-colors duration-150 cursor-pointer",
+              size === "lg" ? "h-12 px-3.5" : size === "sm" ? "px-2 py-1.5" : "px-3 py-2",
+              isPrimary
+                ? "bg-invert-bg text-invert-fg border-l border-invert-fg/20 hover:opacity-80"
+                : "border border-line-strong border-l-0 bg-bg text-ink hover:bg-invert-bg hover:text-invert-fg",
+            )}
+          >
+            <ChevronDownIcon
+              aria-hidden
+              className={twMerge(
+                "h-4 w-4 transition-transform duration-150",
+                menuOpen && "rotate-180",
+              )}
+            />
+          </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute top-full left-0 z-50 mt-1 w-full min-w-[280px] border border-line bg-bg-raised p-1 shadow-lg text-left"
+            >
+              <div className="border-b border-line px-3 py-2">
+                <p className="hud-label text-[11px] text-faint">Select Linux format</p>
+              </div>
+              <ul className="flex flex-col">
+                {linuxOptions.map((opt) => {
+                  const isDefault = opt.fileName.endsWith(".flatpak");
+                  const isSelected = activeDownload.fileName === opt.fileName;
+                  return (
+                    <li key={opt.href}>
+                      <a
+                        href={opt.href}
+                        download={opt.fileName}
+                        role="menuitem"
+                        onClick={() => {
+                          setSelectedDownload(opt);
+                          setMenuOpen(false);
+                        }}
+                        className={twMerge(
+                          "group/opt flex items-center justify-between gap-3 p-2.5 text-left transition-colors duration-150 hover:bg-bg-sunken",
+                          isSelected && "bg-ink/5",
+                        )}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="block text-sm font-medium text-ink">
+                              {opt.label}
+                            </span>
+                            {isDefault && (
+                              <span className="hud-label text-[10px] text-(--app-ink,var(--accent-ink))">
+                                Default
+                              </span>
+                            )}
+                          </span>
+                          <span className="block text-xs text-muted">
+                            {opt.description}
+                          </span>
+                          <span className="mt-0.5 block truncate font-mono text-[10px] text-faint">
+                            {opt.fileName}
+                          </span>
+                        </span>
+                        <ArrowDownToLineIcon
+                          aria-hidden
+                          className="h-4 w-4 shrink-0 text-muted group-hover/opt:text-ink"
+                        />
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+        <span aria-hidden={!activeDownload} className="hud-label min-h-4 w-0 min-w-full whitespace-nowrap text-faint">
+          {activeDownload ? `For Linux · ${activeDownload.label}` : "\u00a0"}
+        </span>
+      </span>
+    );
+  }
+
   return (
     <span className={twMerge("flex flex-col gap-2", className)}>
       <Button
@@ -198,6 +358,15 @@ export function LauncherDownloadButton({
       </span>
     </span>
   );
+}
+
+function linuxFormatPriority(fileName: string): number {
+  if (fileName.endsWith(".flatpak")) return 1;
+  if (fileName.endsWith(".AppImage")) return 2;
+  if (fileName.endsWith(".deb")) return 3;
+  if (fileName.endsWith(".rpm")) return 4;
+  if (fileName.endsWith(".tar.gz")) return 5;
+  return 6;
 }
 
 /**

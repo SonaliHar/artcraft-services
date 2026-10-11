@@ -65,6 +65,7 @@ export function LauncherCallout({ app }: { app: CraftApp }) {
         </p>
         <LauncherDownloadButton
           recommended={recommended}
+          allDownloads={craftLauncherDownloads()}
           fallbackHref={craftLauncherReleasePageUrl()}
           fullWidth
           className="mt-4"

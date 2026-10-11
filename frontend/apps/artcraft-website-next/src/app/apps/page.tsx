@@ -28,6 +28,7 @@ import { trackAttrs } from "@/lib/analytics";
 import {
   CRAFT_LAUNCHER_NAME,
   CRAFT_LAUNCHER_REPO,
+  craftLauncherDownloads,
   craftLauncherReleasePageUrl,
 } from "@/lib/craft-launcher";
 import {
@@ -73,6 +74,7 @@ const PRINCIPLE_ICONS = [
 
 export default function CraftingAppsPage() {
   const launcherDownloads = craftLauncherRecommended();
+  const allLauncherDownloads = craftLauncherDownloads();
   return (
     <>
       <RevealManager />
@@ -93,6 +95,7 @@ export default function CraftingAppsPage() {
           {launcherDownloads.length > 0 && (
             <LauncherDownloadButton
               recommended={launcherDownloads}
+              allDownloads={allLauncherDownloads}
               fallbackHref={craftLauncherReleasePageUrl()}
             />
           )}
