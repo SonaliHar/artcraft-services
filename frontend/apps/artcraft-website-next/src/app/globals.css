@@ -276,6 +276,18 @@ html[data-ruler="on"]::-webkit-scrollbar {
   height: 0;
 }
 
+/* Docs keep clear of the ruler. Elsewhere content may flow under the frosted
+   rail, but docs carry right-aligned counts, the "On this page" rail and
+   long reading lines. While the ruler is mounted, the docs sections' 1280px
+   rail shrinks so it ends a gap short of the ruler on both sides (the ruler
+   can sit on either). At 1440 and up nothing changes: the 1280 rail already
+   clears it. */
+@media (min-width: 1024px) {
+  html[data-ruler] .docs-ruler-safe > div {
+    max-width: min(1280px, calc(100vw - 2 * (var(--ruler-rail, 60px) + 1rem)));
+  }
+}
+
 /* Rolling odometer for the ruler's percent readout. Digit columns translate
    by whole digits; the reduced-motion blanket below disables the roll. */
 .ruler-digits {

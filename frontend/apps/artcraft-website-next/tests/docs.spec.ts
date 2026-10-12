@@ -47,6 +47,22 @@ test("docs home has one card per app with its icon and no monograms", async ({ p
   await expect(page.locator("[data-monogram]")).toHaveCount(0);
 });
 
+test("docs content keeps clear of the scroll ruler between 1024 and 1320px", async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.goto("/docs");
+  await expect(page.locator("html[data-ruler]")).toHaveCount(1);
+  const { side, rail } = await page.evaluate(() => ({
+    side: document.documentElement.dataset.rulerSide,
+    rail: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ruler-rail")),
+  }));
+  const viewport = 1100;
+  for (const label of await page.getByText(/^\d+ pages$/).all()) {
+    const box = (await label.boundingBox())!;
+    if (side === "right") expect(box.x + box.width).toBeLessThanOrEqual(viewport - rail);
+    else expect(box.x).toBeGreaterThanOrEqual(rail);
+  }
+});
+
 test("the phone menu shows the app's icon", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/docs/photocraft");

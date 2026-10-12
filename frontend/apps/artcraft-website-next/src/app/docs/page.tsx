@@ -41,6 +41,7 @@ export default function DocsHome() {
     <>
       <RevealManager />
       <PageHeader
+        className="docs-ruler-safe"
         index="01"
         label="Docs"
         annotation={apps.length > 0 ? `${apps.length} apps · ${pageCount} pages` : undefined}
@@ -57,12 +58,12 @@ export default function DocsHome() {
       </PageHeader>
 
       {apps.length === 0 ? (
-        <SectionShell>
+        <SectionShell className="docs-ruler-safe">
           <p className="px-6 py-12 text-muted md:px-10">Docs are on their way.</p>
         </SectionShell>
       ) : (
         <>
-          <SectionShell>
+          <SectionShell className="docs-ruler-safe">
             <SectionEyebrow index="02" label="Apps" annotation="Pick an app" />
             <ul className="grid gap-px bg-line md:grid-cols-2">
               {apps.map((app) => (
@@ -72,11 +73,11 @@ export default function DocsHome() {
           </SectionShell>
 
           {fixes.length > 0 && (
-            <SectionShell>
+            <SectionShell className="docs-ruler-safe">
               <SectionEyebrow index="03" label="Common fixes" annotation="Find your symptom" />
-              <ul className="grid gap-px bg-line md:grid-cols-2">
-                {fixes.map((group) => (
-                  <FixGroup key={group.app.slug} {...group} />
+              <ul className="grid pb-8 md:grid-cols-2 md:pb-10">
+                {fixes.map((group, index) => (
+                  <FixGroup key={group.app.slug} {...group} column={index % 2 === 0 ? "left" : "right"} />
                 ))}
               </ul>
             </SectionShell>
@@ -87,17 +88,42 @@ export default function DocsHome() {
   );
 }
 
-// One app's common fixes: a small heading with its mark, its specific
-// symptoms as rows (the same rows as the app cards' section lists), then a
-// link to the whole troubleshooting folder. Three subgrid rows, so groups
-// side by side line up their lists and their footers.
-function FixGroup({ app, pages, allHref }: { app: DocApp; pages: DocPage[]; allHref: string | null }) {
+// One app's common fixes: a heading with its mark, its specific symptoms as
+// rows (the same rows as the app cards' section lists), then a link to the
+// whole troubleshooting folder. Three subgrid rows, so groups side by side
+// line up their lists and their footers.
+//
+// Apps are set apart the way the site sets sections apart, not with boxes:
+// a band of empty paper between group rows, crossed only by the section's
+// side rails; a strong rule opens each group, and crosshair ticks mark
+// where that rule meets the rails and the column divider. Inside a group
+// the rules stay hairlines.
+function FixGroup({
+  app,
+  pages,
+  allHref,
+  column,
+}: {
+  app: DocApp;
+  pages: DocPage[];
+  allHref: string | null;
+  column: "left" | "right";
+}) {
   const craft = docCraftApp(app);
   return (
-    <li className={`flex flex-col bg-bg md:row-span-3 md:grid md:grid-rows-subgrid ${themeOf(app)}`}>
-      <h2 className="flex items-center gap-3 px-6 pt-6 pb-4 md:px-10">
-        <DocsAppMark name={app.name} icon={docAppIcon(app)} className="h-6 w-6 drop-shadow-none" />
-        <span className="font-display text-lg leading-tight tracking-[-0.02em] text-ink-strong">
+    <li
+      className={`relative mt-8 flex flex-col border-y border-t-line-strong border-b-line bg-bg md:row-span-3 md:mt-10 md:grid md:grid-rows-subgrid ${
+        column === "left" ? "md:border-r md:border-r-line" : ""
+      } ${themeOf(app)}`}
+    >
+      <span aria-hidden className="tick -top-[6px] -left-[6px]" />
+      {/* Phones stack every group, so each one marks both rails; side by
+          side, the left group's right tick would sit on the right group's
+          left tick, so only the right column draws it. */}
+      <span aria-hidden className={`tick -top-[6px] -right-[6px] ${column === "left" ? "md:hidden" : ""}`} />
+      <h2 className="flex items-center gap-3 px-6 pt-6 pb-5 md:px-10 md:pt-7">
+        <DocsAppMark name={app.name} icon={docAppIcon(app)} className="h-7 w-7 drop-shadow-none" />
+        <span className="font-display text-xl leading-tight tracking-[-0.025em] text-ink-strong">
           <DocsAppName name={app.name} craft={craft} />
         </span>
       </h2>

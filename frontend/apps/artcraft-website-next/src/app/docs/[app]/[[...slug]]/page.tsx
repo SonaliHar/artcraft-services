@@ -88,7 +88,7 @@ export default async function DocsPage({ params }: { params: Params }) {
     <div className={craft ? appThemeClass(craft) : undefined}>
       <RevealManager />
 
-      <SectionShell>
+      <SectionShell className="docs-ruler-safe">
         <header className={`grid ${COLUMNS}`}>
           <div className="hidden border-r border-line px-6 py-10 md:block md:py-14">
             {/* The app's lockup: its icon at the size /apps cards use, the
@@ -130,7 +130,7 @@ export default async function DocsPage({ params }: { params: Params }) {
         </header>
       </SectionShell>
 
-      <SectionShell>
+      <SectionShell className="docs-ruler-safe">
         <div className={`grid ${COLUMNS}`}>
           <aside className="hidden border-r border-line md:block">
             <DocsSidebar nav={nav} currentHref={href} />
