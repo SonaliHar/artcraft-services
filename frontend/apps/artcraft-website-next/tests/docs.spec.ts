@@ -21,7 +21,20 @@ test("a Craft app's docs carry its icon and color", async ({ page }) => {
 test("ArtCraft keeps its mark and the site blue", async ({ page }) => {
   await page.goto("/docs/artcraft");
   await expect(page.getByRole("link", { name: "ArtCraft Docs" }).locator('img[src="/artcraft-icon.svg"]')).toBeVisible();
-  await expect(page.locator("[class*='app-']").filter({ has: page.getByRole("heading", { level: 1 }) })).toHaveCount(0);
+  const craftThemes = ["photocraft", "vectorcraft", "filmcraft", "lightcraft", "pdfcraft", "effectcraft", "designcraft", "wordcraft", "soundcraft", "deckcraft", "cadcraft", "gridcraft"]
+    .map((slug) => `[class~="app-${slug}"]`)
+    .join(", ");
+  await expect(page.locator(craftThemes)).toHaveCount(0);
+});
+
+test("common fixes are grouped by app, skip help pages and link the whole folder", async ({ page }) => {
+  await page.goto("/docs");
+  const group = page.getByRole("listitem").filter({ has: page.getByRole("heading", { level: 2, name: "ArtCraft" }) });
+  await expect(group.getByRole("link", { name: "Broken thing" })).toHaveAttribute("href", "/docs/artcraft/troubleshooting/broken-thing");
+  await expect(group.getByRole("link", { name: "All ArtCraft troubleshooting" })).toHaveAttribute("href", "/docs/artcraft/troubleshooting");
+  // PhotoCraft's only troubleshooting page is a generic help page, so it has no group.
+  await expect(page.getByRole("heading", { level: 2, name: "PhotoCraft" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Get help with a problem" })).toHaveCount(0);
 });
 
 test("docs home has one card per app with its icon and no monograms", async ({ page }) => {

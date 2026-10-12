@@ -5,6 +5,7 @@ import { SITE_URL } from "./links";
 import { docHref, rawHref } from "../../scripts/docs/core.mjs";
 import { DOC_SOURCES, docsCacheDir } from "../../scripts/docs/sources.mjs";
 import { loadDocApps, loadGenerated } from "../../scripts/docs/load.mjs";
+import { pickCommonFixes } from "../../scripts/docs/fixes.mjs";
 import { buildNav, flattenNav } from "../../scripts/docs/nav.mjs";
 import { renderDoc } from "../../scripts/docs/render.mjs";
 import { llmsFull, llmsIndex, rawMarkdown, searchIndex } from "../../scripts/docs/outputs.mjs";
@@ -96,11 +97,16 @@ export function getNavPath(nav: NavNode[], href: string): NavNode[] {
   return [];
 }
 
-// Pages under troubleshooting/ (not the folder's index), for "Common fixes".
-export function getTroubleshootingPages(app: DocApp): DocPage[] {
-  return app.pages
-    .filter((page) => page.file.startsWith("troubleshooting/") && !page.file.endsWith("index.md"))
-    .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+// "Common fixes" for one app: up to three specific troubleshooting pages in
+// sidebar order, leaving out the generic help / bug-report pages.
+export function getCommonFixes(app: DocApp): DocPage[] {
+  return pickCommonFixes(app.pages) as DocPage[];
+}
+
+// The app's troubleshooting index page, or null when the folder has none.
+export function getTroubleshootingHref(app: DocApp): string | null {
+  const index = app.pages.find((page) => page.file === "troubleshooting/index.md");
+  return index ? docHref(app.slug, index.urlPath) : null;
 }
 
 // The Craft app behind a docs source (its color, wordmark and icon), or
