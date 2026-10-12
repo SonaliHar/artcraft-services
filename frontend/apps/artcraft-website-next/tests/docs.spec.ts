@@ -53,3 +53,34 @@ test("machine outputs", async ({ request }) => {
   const skill = await (await request.get("/docs/agents/support.md")).text();
   expect(skill).toContain("name: craft-docs-support");
 });
+
+test("table of contents lists the sections and follows scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/docs/artcraft/guides/first-guide");
+  const toc = page.getByRole("navigation", { name: "On this page" });
+  await expect(toc.getByRole("link", { name: "Step one" })).toBeVisible();
+  await page.locator("#step-two").scrollIntoViewIfNeeded();
+  await expect(toc.getByRole("link", { name: "Step two" })).toHaveAttribute("aria-current", "location");
+});
+
+test("previous and next links follow the sidebar order", async ({ page }) => {
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await expect(page.getByRole("link", { name: /Previous.*Guides/ })).toHaveAttribute("href", "/docs/artcraft/guides");
+  await expect(page.getByRole("link", { name: /Next.*Models/ })).toHaveAttribute("href", "/docs/artcraft/reference/models");
+});
+
+test("breadcrumbs show where the page sits", async ({ page }) => {
+  await page.goto("/docs/artcraft/troubleshooting/broken-thing");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(crumbs.getByRole("link", { name: "Docs" })).toHaveAttribute("href", "/docs");
+  await expect(crumbs.getByRole("link", { name: "ArtCraft" })).toHaveAttribute("href", "/docs/artcraft");
+});
+
+test("mobile menu works and shows the current section", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/docs/artcraft/guides/first-guide");
+  const menu = page.locator("details", { hasText: "Menu" });
+  await expect(menu.getByRole("link", { name: "First guide" })).toBeHidden();
+  await menu.locator("summary").click();
+  await expect(menu.getByRole("link", { name: "First guide" })).toHaveAttribute("aria-current", "page");
+});

@@ -1,23 +1,39 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import RevealManager from "@/components/reveal-manager";
 import { SectionShell } from "@/components/landing/section-shell";
-import { ArticleBody, BackLink, PageHeader } from "@/components/page/page-header";
+import { ArticleBody } from "@/components/page/page-header";
+import DocsAppMark from "@/components/docs/docs-app-mark";
+import DocsBreadcrumbs, { type Crumb } from "@/components/docs/docs-breadcrumbs";
+import { DocsMenuDisclosure, DocsTocDisclosure } from "@/components/docs/docs-mobile-nav";
+import DocsPager from "@/components/docs/docs-pager";
 import DocsSidebar from "@/components/docs/docs-sidebar";
+import DocsToc from "@/components/docs/docs-toc";
 import {
+  docAppIcon,
   docEditUrl,
   docHref,
   findDocPage,
   getDocApp,
   getDocApps,
   getDocNav,
+  getDocPager,
+  getNavPath,
   rawHref,
+  readingMinutes,
   renderDocPage,
 } from "@/lib/docs";
 
 type Params = Promise<{ app: string; slug?: string[] }>;
 
 export const dynamicParams = false;
+
+// Shared column template so header and body rails line up:
+// sidebar | article | table of contents.
+const COLUMNS = "md:grid-cols-[16.5rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)_14.5rem]";
+// The rails stick below the 48px site nav and scroll on their own when long.
+const RAIL = "sticky top-12 max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain";
 
 export function generateStaticParams() {
   return getDocApps().flatMap((app) =>
@@ -43,33 +59,90 @@ export default async function DocsPage({ params }: { params: Params }) {
   const page = app && findDocPage(app, path);
   if (!app || !page) notFound();
 
-  const { html } = await renderDocPage(app, page);
+  const { html, headings } = await renderDocPage(app, page);
   const href = docHref(app.slug, page.urlPath);
+  const appHome = docHref(app.slug, "");
+  const nav = getDocNav(app);
+  const navPath = getNavPath(nav, href);
+  const { prev, next } = getDocPager(app, href);
+  const crumbs: Crumb[] = [
+    { title: "Docs", href: "/docs" },
+    { title: app.name, href: appHome, current: href === appHome },
+    ...navPath.slice(0, -1).map((node) => ({ title: node.title, href: node.href })),
+  ];
+  const section = navPath[0]?.title ?? page.title;
+  const minutes = readingMinutes(page);
 
   return (
     <>
       <RevealManager />
-      <PageHeader index="01" label="Docs" annotation={app.name} title={page.title} lede={page.description}>
-        <div className="mt-8">
-          <BackLink href="/docs">All docs</BackLink>
-        </div>
-      </PageHeader>
+
       <SectionShell>
-        <div className="grid md:grid-cols-[16rem_minmax(0,1fr)]">
-          <DocsSidebar nav={getDocNav(app)} currentHref={href} />
-          <div className="docs-article">
-            <ArticleBody html={html} />
-            <footer className="hud-label mx-auto flex max-w-3xl flex-wrap gap-x-6 gap-y-2 px-6 pb-12 text-muted md:px-10">
-              <a href={docEditUrl(app, page)} className="hover:text-ink">Edit on GitHub</a>
-              <a href={rawHref(app.slug, page.file)} className="hover:text-ink">Markdown</a>
-              {page.verified && <span>Checked against v{page.verified}</span>}
-              {app.sha && (
-                <a href={`https://github.com/${app.repo}/commit/${app.sha}`} className="hover:text-ink">
-                  Source {app.sha.slice(0, 7)}
-                </a>
-              )}
-            </footer>
+        <header className={`grid ${COLUMNS}`}>
+          <div className="hidden border-r border-line px-6 py-10 md:block md:py-14">
+            <Link href={appHome} className="group flex items-center gap-3">
+              <DocsAppMark name={app.name} icon={docAppIcon(app)} />
+              <span className="min-w-0">
+                <span className="block font-display text-base leading-tight tracking-[-0.02em] text-ink-strong group-hover:text-accent-ink">
+                  {app.name}
+                </span>
+                <span className="hud-label block text-faint">Docs</span>
+              </span>
+            </Link>
           </div>
+          <div className="px-6 py-10 md:px-10 md:py-14">
+            <DocsBreadcrumbs crumbs={crumbs} />
+            <h1 className="mt-6 max-w-3xl font-display [overflow-wrap:anywhere] text-[2.125rem] leading-[1.04] tracking-[-0.035em] text-ink-strong sm:text-5xl">
+              {page.title}
+            </h1>
+            {page.description && (
+              <p className="mt-5 max-w-[62ch] text-lg [overflow-wrap:anywhere] leading-relaxed text-muted">{page.description}</p>
+            )}
+          </div>
+          <dl className="hidden content-start gap-4 border-l border-line px-6 py-10 md:py-14 xl:grid">
+            <div>
+              <dt className="hud-label text-faint">Reading</dt>
+              <dd className="mt-1 font-mono text-sm text-ink">{minutes} min</dd>
+            </div>
+            {page.verified && (
+              <div>
+                <dt className="hud-label text-faint">Checked</dt>
+                <dd className="mt-1 font-mono text-sm text-ink">v{page.verified}</dd>
+              </div>
+            )}
+          </dl>
+        </header>
+      </SectionShell>
+
+      <SectionShell>
+        <div className={`grid ${COLUMNS}`}>
+          <aside className="hidden border-r border-line md:block">
+            <DocsSidebar nav={nav} currentHref={href} className={`${RAIL} docs-rail px-6 py-8`} />
+          </aside>
+
+          <div className="min-w-0">
+            <DocsMenuDisclosure nav={nav} currentHref={href} section={section} className="md:hidden" />
+            <DocsTocDisclosure headings={headings} className="xl:hidden" />
+            <div className="docs-article">
+              <ArticleBody html={html} />
+              <span id="docs-article-end" aria-hidden className="block h-px" />
+              <footer className="hud-label flex flex-wrap gap-x-6 gap-y-2 px-6 pb-12 text-muted md:px-10">
+                <a href={docEditUrl(app, page)} className="hover:text-ink">Edit on GitHub</a>
+                <a href={rawHref(app.slug, page.file)} className="hover:text-ink">Markdown</a>
+                {page.verified && <span>Checked against v{page.verified}</span>}
+                {app.sha && (
+                  <a href={`https://github.com/${app.repo}/commit/${app.sha}`} className="hover:text-ink">
+                    Source {app.sha.slice(0, 7)}
+                  </a>
+                )}
+              </footer>
+            </div>
+            <DocsPager prev={prev} next={next} />
+          </div>
+
+          <aside className="hidden border-l border-line xl:block">
+            <DocsToc headings={headings} className={`${RAIL} docs-rail px-6 py-8`} />
+          </aside>
         </div>
       </SectionShell>
     </>
