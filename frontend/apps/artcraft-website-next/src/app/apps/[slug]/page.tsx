@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
+  AppDemo,
   AppFamily,
   AppGallery,
   AppGetIt,
@@ -90,6 +91,9 @@ export default async function CraftAppPage({ params }: { params: Params }) {
   const [hero] = app.shots;
   const [before, accent, after] = app.headline;
   const shareUrl = siteUrl(craftAppPath(app));
+  // A demo takes section 02 and pushes the rest down one.
+  const sectionIndex = (n: number) =>
+    String(n + (app.demo ? 1 : 0)).padStart(2, "0");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -195,9 +199,11 @@ export default async function CraftAppPage({ params }: { params: Params }) {
         </div>
       </CampaignHero>
 
+      {app.demo && <AppDemo app={app} demo={app.demo} index="02" />}
+
       <CampaignSection
         id="highlights"
-        index="02"
+        index={sectionIndex(2)}
         label="Highlights"
         annotation={app.category}
         title={
@@ -209,9 +215,9 @@ export default async function CraftAppPage({ params }: { params: Params }) {
         <TipGrid items={app.features} columns={3} />
       </CampaignSection>
 
-      <AppGallery app={app} index="03" />
-      <AppGetIt app={app} index="04" />
-      <AppFamily app={app} index="05" />
+      <AppGallery app={app} index={sectionIndex(3)} />
+      <AppGetIt app={app} index={sectionIndex(4)} />
+      <AppFamily app={app} index={sectionIndex(5)} />
 
       <ClosingCta
         eyebrow="Open source · Free"

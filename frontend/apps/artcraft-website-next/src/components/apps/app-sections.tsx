@@ -2,9 +2,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowUpRightIcon, TerminalIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
+import { CampaignSection } from "@/components/campaign/sections";
 import DiscordButton from "@/components/discord-button";
 import { GitHubIcon } from "@/components/icons";
 import { SectionShell, SectionEyebrow } from "@/components/landing/section-shell";
+import LazyVideo from "@/components/lazy-video";
 import { Badge, Button, CopyButton } from "@/components/ui";
 import { trackAttrs } from "@/lib/analytics";
 import { CRAFT_LAUNCHER_RELEASE } from "@/lib/crafting-app-releases";
@@ -15,6 +17,7 @@ import {
   craftAppName,
   craftAppRelease,
   craftAppRepo,
+  craftDemoPosterUrl,
   craftReleaseDownloads,
   craftReleasePageUrl,
   craftReleasesUrl,
@@ -22,6 +25,7 @@ import {
   craftShotUrl,
   formatList,
   type CraftApp,
+  type CraftDemo,
 } from "@/lib/crafting-apps";
 import AppCard from "./app-card";
 import { AppPlatformDownloads, DownloadRow } from "./app-downloads";
@@ -33,6 +37,50 @@ import { LauncherCallout } from "./launcher-callout";
 
 const CELL_HEADING_CLASSES =
   "mt-4 font-display text-3xl font-medium leading-[1.05] tracking-[-0.03em] text-ink-strong sm:text-4xl";
+
+// A feature clip (apps with a `demo`), directly under the hero.
+export function AppDemo({
+  app,
+  demo,
+  index,
+}: {
+  app: CraftApp;
+  demo: CraftDemo;
+  index: string;
+}) {
+  const [before, accent, after] = demo.headline;
+  return (
+    <CampaignSection
+      id="demo"
+      index={index}
+      label={demo.label}
+      annotation={craftAppName(app)}
+      title={
+        <>
+          {before}
+          <ColorAccent>{accent}</ColorAccent>
+          {after}
+        </>
+      }
+      lede={demo.lede}
+    >
+      <figure data-reveal className="border-t border-line">
+        <div className="relative aspect-video w-full overflow-hidden bg-bg-sunken">
+          <LazyVideo
+            src={demo.src}
+            poster={craftDemoPosterUrl(app, demo)}
+            label={demo.caption}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
+        <figcaption className="flex items-center justify-between gap-4 border-t border-line px-6 py-3 md:px-10">
+          <span className="hud-label text-muted">{demo.caption}</span>
+          <span className="hud-label text-faint">Video</span>
+        </figcaption>
+      </figure>
+    </CampaignSection>
+  );
+}
 
 // The hero carries shot 01. Window captures pair up, and an odd one out
 // leads at full width; portrait pages (layout spreads) sit four across.

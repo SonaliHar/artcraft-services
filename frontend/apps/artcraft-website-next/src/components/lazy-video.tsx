@@ -7,10 +7,12 @@ import { useEffect, useRef } from "react";
 // ambient motion.
 export default function LazyVideo({
   src,
+  poster,
   className,
   label,
 }: {
   src: string;
+  poster?: string;
   className?: string;
   label?: string;
 }) {
@@ -45,6 +47,7 @@ export default function LazyVideo({
     <video
       ref={ref}
       src={src}
+      poster={poster}
       className={className}
       muted
       loop

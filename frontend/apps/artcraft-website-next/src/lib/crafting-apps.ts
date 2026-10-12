@@ -18,7 +18,8 @@ import { mediaUrl } from "./links";
 // release there is null show a Discord waitlist instead of installers.
 //
 // Assets live in public/images/apps/<slug>/: icon.webp (the repo's 512 px
-// hicolor render at 256 px), og.jpg (1200×630 share card) and the shots.
+// hicolor render at 256 px), og.jpg (1200×630 share card), the shots and,
+// for an app with a demo, its poster frame.
 
 export type CraftAppSlug =
   | "photocraft"
@@ -28,6 +29,7 @@ export type CraftAppSlug =
   | "pdfcraft"
   | "effectcraft"
   | "designcraft"
+  | "figcraft"
   | "wordcraft"
   | "soundcraft"
   | "deckcraft"
@@ -45,6 +47,19 @@ export type CraftShot = {
   alt: string;
   /** Portrait page (7:9) rather than a 16:10 window capture. */
   portrait?: boolean;
+};
+
+/** A feature clip with its own section under the hero. */
+export type CraftDemo = {
+  /** Muted, looping 16:9 clip. */
+  src: string;
+  /** Still under public/images/apps/<slug>/, shown until the clip plays. */
+  poster: string;
+  label: string;
+  /** Headline split around its one color-accented contrast word. */
+  headline: [before: string, accent: string, after: string];
+  lede: string;
+  caption: string;
 };
 
 export type CraftApp = {
@@ -65,6 +80,7 @@ export type CraftApp = {
   features: Tip[];
   /** First shot is the hero. */
   shots: [CraftShot, ...CraftShot[]];
+  demo?: CraftDemo;
 };
 
 /** One release file, resolved to a URL for a specific app. */
@@ -541,6 +557,96 @@ export const CRAFTING_APPS: CraftApp[] = [
     ],
   },
   {
+    slug: "figcraft",
+    prefix: "Fig",
+    category: "Interface design",
+    status: "Early alpha",
+    headline: ["Interface design, ", "rebuilt", " in pure Rust."],
+    pitch: "Open-source interface design and prototyping, rebuilt in pure Rust.",
+    lede: "Frames, auto layout, components and variants, vector networks, styles, variables and prototypes in a native app that opens instantly and works offline. No account, no telemetry, no subscription.",
+    schemaCategory: "DesignApplication",
+    platforms: ["macOS", "Windows", "Linux", "Web"],
+    rustVersion: "1.95",
+    features: [
+      {
+        title: "Familiar by design",
+        body: "The toolbar, layers panel, Design panel, menus and shortcuts sit where your hands expect them. Productive on day one, no retraining.",
+      },
+      {
+        title: "Layouts that build themselves",
+        body: "Auto layout in both directions with wrap and grid, padding, gaps and Hug, Fill and Fixed sizing, plus constraints and layout grids for everything else.",
+      },
+      {
+        title: "Components that scale",
+        body: "Instances with overrides that survive edits, component sets with variants and properties, and styles and variables with modes for light and dark.",
+      },
+      {
+        title: "Real vector networks",
+        body: "Pen and pencil, a shape builder, booleans whose operands stay editable, variable-width strokes and smooth corners.",
+      },
+      {
+        title: "Prototype and hand off",
+        body: "Connections, triggers and animated transitions, a presentation view, and Dev Mode with measurements, annotations and generated CSS, HTML, React, SwiftUI and Compose code.",
+      },
+      {
+        title: "Agent-ready",
+        body: "Every menu item, tool and gesture runs one of 400+ commands, so the CLI, a JSON control channel and an MCP server can do anything you can click.",
+      },
+    ],
+    shots: [
+      {
+        file: "hero.webp",
+        source: "shot-1-hero.png",
+        caption: "Ridgeline — auto layout screens in light and dark",
+        alt: "FigCraft editing the Ridgeline hiking app: three phone screens on the canvas, the Featured trail card instance selected, the layers panel showing its auto layout tree, and the Design panel showing Fill and Hug sizing and the Theme variable mode",
+      },
+      {
+        file: "components.webp",
+        source: "shot-2-components.png",
+        caption: "Components, variants and the Assets panel",
+        alt: "FigCraft's Assets panel with live component thumbnails beside a Button component set of nine variants, and the Design panel listing its Style and State variant properties",
+      },
+      {
+        file: "prototype.webp",
+        source: "shot-3-prototype.png",
+        caption: "Prototype connections and flows",
+        alt: "Four onboarding phone screens in FigCraft's Prototype tab joined by connection curves, with the Prototype panel showing an On click, Navigate to interaction",
+      },
+      {
+        file: "dev-mode.webp",
+        source: "shot-4-devmode.png",
+        caption: "Dev Mode with annotations and generated code",
+        alt: "FigCraft's Dev Mode on the Ridgeline home screen with a Ready for dev badge, an annotation callout, and the Inspect panel showing generated React code for the selected trail row",
+      },
+      {
+        file: "vector.webp",
+        source: "shot-5-vector.png",
+        caption: "Vector networks and variable-width strokes",
+        alt: "FigCraft's vector edit mode on a wave path with a tapered gradient stroke, its anchor points and bezier handles visible, above a boolean-built mountain mark and a knot of excluded rings",
+      },
+      {
+        file: "dashboard.webp",
+        source: "shot-6-dashboard-light.png",
+        caption: "Layout grids and styles, light theme",
+        alt: "FigCraft in its light theme with a web analytics dashboard of KPI cards, bar, donut and area charts, and the frame's 12-column layout grid showing as tinted columns",
+      },
+      {
+        file: "collab.webp",
+        source: "shot-7-collab.png",
+        caption: "Live session with cursor chat and spotlight",
+        alt: "A FigCraft live session with three participant avatars, a spotlight banner with a Follow button, two collaborators' cursors and selections on the canvas, and a cursor chat bubble",
+      },
+    ],
+    demo: {
+      src: "https://frontend-cdn.fakeyou.com/videos/figcraft-collab-web.mp4",
+      poster: "collab-poster.webp",
+      label: "Live sessions",
+      headline: ["Design ", "together", ", in real time."],
+      lede: "Host the open file from the app or a server of your own, share the invite link, and edit it together. Changes sync live with cursors, selections and cursor chat, and undo takes back only your own.",
+      caption: "A host and a guest editing one file",
+    },
+  },
+  {
     slug: "wordcraft",
     prefix: "Word",
     category: "Word processing",
@@ -977,6 +1083,10 @@ export function craftShotUrl(app: CraftApp, shot: CraftShot): string {
 
 export function craftShotSourceUrl(app: CraftApp, shot: CraftShot): string {
   return `https://raw.githubusercontent.com/storytold/${app.slug}/main/docs/images/${shot.source}`;
+}
+
+export function craftDemoPosterUrl(app: CraftApp, demo: CraftDemo): string {
+  return mediaUrl(`/images/apps/${app.slug}/${demo.poster}`);
 }
 
 export function craftAppIconPath(app: CraftApp): string {

@@ -45,7 +45,7 @@ import { siteUrl } from "@/lib/links";
 
 const TITLE = "Crafting Apps: open-source creative tools";
 const COVERAGE =
-  "Image editing, vector illustration, video, photography, PDFs, motion graphics, page layout, word processing, audio, presentations, CAD and spreadsheets";
+  "Image editing, vector illustration, video, photography, PDFs, motion graphics, page layout, interface design, word processing, audio, presentations, CAD and spreadsheets";
 const DESCRIPTION = `${COVERAGE}: ${CRAFTING_APPS_COUNT_WORD.toLowerCase()} native, open-source apps from the ArtCraft team, built in Rust and free to use.`;
 
 export const metadata: Metadata = {
@@ -86,7 +86,10 @@ export default function CraftingAppsPage() {
         annotation={`${CRAFTING_APPS_COUNT_WORD} apps · Open source · Pure Rust`}
         title={
           <>
-            {CRAFTING_APPS_COUNT_WORD} apps. One <ColorAccent>craft</ColorAccent>.
+            {CRAFTING_APPS_COUNT_WORD} apps.{" "}
+            <span className="whitespace-nowrap">
+              One <ColorAccent>craft</ColorAccent>.
+            </span>
           </>
         }
         lede={`${COVERAGE}. Native, open-source apps from the ArtCraft team, built in Rust and free to use.`}
@@ -139,7 +142,8 @@ export default function CraftingAppsPage() {
         <nav
           aria-label="Crafting Apps"
           data-reveal
-          className="mt-12 flex flex-wrap gap-x-3 gap-y-6 sm:gap-x-5"
+          // Two even rows from sm up (7 + 6) rather than a lone last icon.
+          className="mt-12 grid w-fit grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-7 sm:gap-x-5"
         >
           {CRAFTING_APPS.map((app) => (
             <Link
