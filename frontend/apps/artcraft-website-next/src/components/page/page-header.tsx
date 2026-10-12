@@ -16,6 +16,7 @@ export function PageHeader({
   title,
   lede,
   children,
+  aside,
   align = "left",
   className,
 }: {
@@ -28,10 +29,31 @@ export function PageHeader({
   lede?: ReactNode;
   /** Extra content under the lede (CTAs, back links, …). */
   children?: ReactNode;
+  /** Beside the text from xl up (vertically centered), beneath it below. */
+  aside?: ReactNode;
   align?: "left" | "center";
   className?: string;
 }) {
   const centered = align === "center";
+  const text = (
+    <>
+      <h1
+        data-reveal
+        className="max-w-3xl font-display text-4xl font-medium leading-[1.02] tracking-[-0.035em] text-ink-strong sm:text-5xl md:text-6xl"
+      >
+        {title}
+      </h1>
+      {lede && (
+        <p
+          data-reveal
+          className="mt-5 max-w-xl text-lg leading-relaxed text-muted"
+        >
+          {lede}
+        </p>
+      )}
+      {children}
+    </>
+  );
   return (
     <SectionShell id={id} className={className}>
       <SectionEyebrow index={index} label={label} annotation={annotation} />
@@ -39,23 +61,11 @@ export function PageHeader({
         className={twMerge(
           "px-6 py-14 md:px-10 md:py-20",
           centered && "flex flex-col items-center text-center",
+          aside && "xl:flex xl:items-center xl:justify-between xl:gap-12",
         )}
       >
-        <h1
-          data-reveal
-          className="max-w-3xl font-display text-4xl font-medium leading-[1.02] tracking-[-0.035em] text-ink-strong sm:text-5xl md:text-6xl"
-        >
-          {title}
-        </h1>
-        {lede && (
-          <p
-            data-reveal
-            className="mt-5 max-w-xl text-lg leading-relaxed text-muted"
-          >
-            {lede}
-          </p>
-        )}
-        {children}
+        {aside ? <div className="min-w-0">{text}</div> : text}
+        {aside}
       </div>
     </SectionShell>
   );

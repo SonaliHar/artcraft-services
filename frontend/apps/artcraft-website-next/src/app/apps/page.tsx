@@ -93,6 +93,33 @@ export default function CraftingAppsPage() {
           </>
         }
         lede={`${COVERAGE}. Native, open-source apps from the ArtCraft team, built in Rust and free to use.`}
+        aside={
+            <nav
+              aria-label="Crafting Apps"
+              data-reveal
+              // Under the text: two even rows from sm up (7 + 6). Beside it from
+              // xl up: centered rows of five.
+              className="mt-12 grid w-fit grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-7 sm:gap-x-5 xl:mt-0 xl:flex xl:w-120 xl:shrink-0 xl:flex-wrap xl:justify-center"
+            >
+              {CRAFTING_APPS.map((app) => (
+                <Link
+                  key={app.slug}
+                  href={craftAppPath(app)}
+                  className={`group flex w-18 flex-col items-center gap-2 sm:w-20 ${appThemeClass(app)}`}
+                  {...trackAttrs("app_select", { app_name: app.slug })}
+                >
+                  <AppIcon
+                    app={app}
+                    priority
+                    className="h-14 w-14 transition-transform duration-300 ease-out group-hover:-translate-y-1 sm:h-20 sm:w-20"
+                  />
+                  <span className="text-xs font-medium text-muted group-hover:text-(--app-ink)">
+                    {craftAppName(app)}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+        }
       >
         <div data-reveal className="mt-8 flex flex-wrap items-start gap-3">
           {launcherDownloads.length > 0 && (
@@ -139,30 +166,6 @@ export default function CraftingAppsPage() {
           text={`Crafting Apps: ${CRAFTING_APPS_COUNT_WORD.toLowerCase()} open-source creative apps from ArtCraft`}
           className="mt-6"
         />
-        <nav
-          aria-label="Crafting Apps"
-          data-reveal
-          // Two even rows from sm up (7 + 6) rather than a lone last icon.
-          className="mt-12 grid w-fit grid-cols-4 gap-x-3 gap-y-6 sm:grid-cols-7 sm:gap-x-5"
-        >
-          {CRAFTING_APPS.map((app) => (
-            <Link
-              key={app.slug}
-              href={craftAppPath(app)}
-              className={`group flex w-18 flex-col items-center gap-2 sm:w-20 ${appThemeClass(app)}`}
-              {...trackAttrs("app_select", { app_name: app.slug })}
-            >
-              <AppIcon
-                app={app}
-                priority
-                className="h-14 w-14 transition-transform duration-300 ease-out group-hover:-translate-y-1 sm:h-20 sm:w-20"
-              />
-              <span className="text-xs font-medium text-muted group-hover:text-(--app-ink)">
-                {craftAppName(app)}
-              </span>
-            </Link>
-          ))}
-        </nav>
       </PageHeader>
 
       <SectionShell id="lineup">
