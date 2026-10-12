@@ -57,7 +57,7 @@ export default async function DocsPage({ params }: { params: Params }) {
       <SectionShell>
         <div className="grid md:grid-cols-[16rem_minmax(0,1fr)]">
           <DocsSidebar nav={getDocNav(app)} currentHref={href} />
-          <div>
+          <div className="docs-article">
             <ArticleBody html={html} />
             <footer className="hud-label mx-auto flex max-w-3xl flex-wrap gap-x-6 gap-y-2 px-6 pb-12 text-muted md:px-10">
               <a href={docEditUrl(app, page)} className="hover:text-ink">Edit on GitHub</a>
