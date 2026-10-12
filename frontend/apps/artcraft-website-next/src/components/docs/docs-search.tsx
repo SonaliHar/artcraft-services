@@ -74,6 +74,8 @@ export default function DocsSearch({ variant = "hero", className }: { variant?: 
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    // Enter or arrows while an IME is composing belong to the IME.
+    if (event.nativeEvent.isComposing) return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       if (results.length === 0) return;
       event.preventDefault();
@@ -299,6 +301,8 @@ function Highlight({ text, words }: { text: string; words: string[] }) {
 function useShortcut(inputRef: React.RefObject<HTMLInputElement | null>) {
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => {
+      // Leave IME composition and keys another handler already took alone.
+      if (event.isComposing || event.defaultPrevented) return;
       const slash = event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey;
       const commandK = event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey) && !event.altKey;
       if (!slash && !commandK) return;

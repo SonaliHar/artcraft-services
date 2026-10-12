@@ -6,11 +6,19 @@ import { siteUrl } from "@/lib/links";
 
 const SHOW_MS = 1800;
 const COPIED = "Link copied";
-// Rough width of the confirmation, to keep it inside the column near the
-// right edge.
-const BUBBLE_WIDTH = 128;
+const BLOCKED = "Copy blocked, use the address bar";
 
 type Bubble = { text: string; left: number; top: number; above: boolean };
+
+// Width of the confirmation chip for a message: padding and icon plus the
+// HUD label's mono advance (0.6875rem glyphs + 0.15em tracking ≈ 8.3px).
+const bubbleWidth = (text: string) => 36 + text.length * 8.3;
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+
+async function copyText(text: string) {
+  if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+  await navigator.clipboard.writeText(text);
+}
 
 // Section anchors (the "#" after each h2/h3) copy the canonical section URL
 // on click. The click is not cancelled, so the browser still scrolls to the
@@ -32,24 +40,29 @@ export default function DocsHeadingLinks() {
       const hash = anchor?.getAttribute("href");
       if (!anchor || !hash?.startsWith("#")) return;
 
+      // Always the canonical getartcraft.com URL, also on dev and previews:
+      // these links get pasted into Discord for users.
       const url = siteUrl(window.location.pathname) + hash;
       const box = anchor.getBoundingClientRect();
       const bounds = frame.getBoundingClientRect();
-      const right = box.right - bounds.left + 10;
-      const above = right + BUBBLE_WIDTH > bounds.width - 16;
       const place = (text: string) => {
+        const width = bubbleWidth(text);
+        const right = box.right - bounds.left + 10;
+        const above = right + width > bounds.width - 16;
         setBubble({
           text,
           above,
-          left: above ? Math.max(0, box.right - bounds.left - BUBBLE_WIDTH) : right,
+          left: above ? clamp(box.right - bounds.left - width, 0, bounds.width - width) : right,
           top: above ? box.top - bounds.top - 6 : box.top - bounds.top + box.height / 2,
         });
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setBubble((current) => current && { ...current, text: "" }), SHOW_MS);
       };
-      navigator.clipboard.writeText(url).then(
+      // No clipboard API at all on insecure origins; the address bar still
+      // has the link.
+      copyText(url).then(
         () => place(COPIED),
-        () => place("Copy blocked, use the address bar"),
+        () => place(BLOCKED),
       );
     };
 

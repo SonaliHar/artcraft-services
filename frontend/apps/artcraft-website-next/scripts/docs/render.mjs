@@ -87,15 +87,28 @@ function wrapCodeBlocks() {
   };
 }
 
+// Markdown tree → sanitized HTML tree with heading ids. Shared by the page
+// render and the search index, so section ids in search can't drift from
+// the ids on the page.
+const toSluggedHtml = { plugins: [remarkRehype, rehypeSanitize, rehypeSlug] };
+
+// A page's h2/h3 headings with their rendered ids and text, without
+// rendering the page. Generated content is expanded first, as on the page,
+// so repeated titles get the same -1, -2 suffixes.
+export function pageHeadings(markdown, generated = {}) {
+  const headings = [];
+  const processor = unified().use(remarkParse).use(remarkGfm).use(toSluggedHtml).use(collectHeadings(headings));
+  processor.runSync(processor.parse(expandGenerated(markdown, generated)));
+  return headings;
+}
+
 export async function renderDoc({ markdown, generated = {}, slug, file, repo, ref, path }) {
   const headings = [];
   const output = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(rewriteLinks, { slug, file, repo, ref, path })
-    .use(remarkRehype)
-    .use(rehypeSanitize)
-    .use(rehypeSlug)
+    .use(toSluggedHtml)
     .use(collectHeadings(headings))
     .use(wrapTables)
     .use(wrapCodeBlocks)

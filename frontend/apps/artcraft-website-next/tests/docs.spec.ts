@@ -126,6 +126,36 @@ test("page actions copy the page link and its Markdown", async ({ page, context 
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("## Step two");
 });
 
+test("heading anchors say so when there is no clipboard", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.addInitScript(() => Object.defineProperty(navigator, "clipboard", { value: undefined }));
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.locator("#step-two").hover();
+  await page.locator("#step-two .heading-anchor").click();
+  await expect(page.getByText("Copy blocked, use the address bar")).toBeVisible();
+  await expect(page).toHaveURL(/#step-two$/);
+  expect(errors).toEqual([]);
+});
+
+test("Copy as Markdown reports a failed download", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.route("**/first-guide.md", (route) => route.fulfill({ status: 500, body: "" }));
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.getByRole("button", { name: "Copy as Markdown" }).click();
+  await expect(page.getByRole("button", { name: "Copy failed" })).toBeVisible();
+});
+
+test("without JavaScript the page offers the Markdown as a link", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await expect(page.getByRole("link", { name: "View Markdown" })).toHaveAttribute("href", "/docs/artcraft/guides/first-guide.md");
+  await expect(page.getByRole("button", { name: "Copy link" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Copy as Markdown" })).toBeHidden();
+  await context.close();
+});
+
 test("Ctrl+K focuses search, Escape clears it and typing in a field is left alone", async ({ page }) => {
   await page.goto("/docs/artcraft/guides/first-guide");
   const search = page.getByRole("combobox", { name: "Search the docs" });

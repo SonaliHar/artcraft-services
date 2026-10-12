@@ -65,3 +65,28 @@ test("search heading ids match the ids the page renders with", async () => {
   assert.deepEqual(entry.headingIds, headings.map((h) => h.id));
   assert.deepEqual(entry.headingIds, ["run-artcraft---safe-from-the-terminal", "fix-it", "fix-it-1"]);
 });
+
+const renderIds = async (markdown, generated = {}) =>
+  (await renderDoc({ markdown, generated, slug: "artcraft", file: "a.md", repo: "r/r", ref: "main", path: "docs" })).headings;
+
+test("search headings keep literal asterisks and drop _em_ and escapes like the page", async () => {
+  const body = [
+    "## 5 * 3 * 2 credits",
+    "## An _emphasised_ word",
+    "## snake\\_case and \\*stars\\*",
+    "> ## Quoted heading",
+    "- ## Listed heading",
+  ].join("\n\n");
+  const [entry] = searchIndex([{ ...app, pages: [{ file: "a.md", urlPath: "a", title: "A", description: "", body }] }]);
+  assert.deepEqual(entry.headings, ["5 * 3 * 2 credits", "An emphasised word", "snake_case and *stars*", "Quoted heading", "Listed heading"]);
+  assert.deepEqual(entry.headingIds, ["5--3--2-credits", "an-emphasised-word", "snake_case-and-stars", "quoted-heading", "listed-heading"]);
+  assert.deepEqual(entry.headingIds, (await renderIds(body)).map((h) => h.id));
+});
+
+test("search headings count headings in generated content, as the page does", async () => {
+  const body = "<!-- generated:faq -->\n\n## Credits";
+  const generated = { faq: "## Credits\n\nGenerated." };
+  const [entry] = searchIndex([{ ...app, pages: [{ file: "a.md", urlPath: "a", title: "A", description: "", body }] }], generated);
+  assert.deepEqual(entry.headingIds, ["credits", "credits-1"]);
+  assert.deepEqual(entry.headingIds, (await renderIds(body, generated)).map((h) => h.id));
+});

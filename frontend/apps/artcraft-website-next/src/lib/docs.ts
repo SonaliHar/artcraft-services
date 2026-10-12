@@ -146,7 +146,7 @@ export function llmsFullText(app: DocApp): string {
 }
 
 export function docsSearchIndex(): SearchEntry[] {
-  return searchIndex(getDocApps()) as SearchEntry[];
+  return searchIndex(getDocApps(), getGenerated()) as SearchEntry[];
 }
 
 export function supportSkillMarkdown(): string {
