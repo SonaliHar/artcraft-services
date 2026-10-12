@@ -41,6 +41,31 @@ function collectHeadings(headings) {
   };
 }
 
+// Tables scroll sideways inside a wrapper instead of turning the table itself
+// into a block, which would drop its table semantics for screen readers. The
+// wrapper is a focusable, labelled region so keyboard users can scroll it.
+function wrapTables() {
+  return (tree) => {
+    let lastHeading = null;
+    visit(tree, "element", (node, index, parent) => {
+      if (/^h[1-6]$/.test(node.tagName)) lastHeading = toString(node);
+      if (node.tagName !== "table" || !parent || index === undefined) return;
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: {
+          className: ["table-scroll"],
+          role: "region",
+          tabIndex: 0,
+          ariaLabel: lastHeading ? `${lastHeading} (table)` : "Table",
+        },
+        children: [node],
+      };
+      return "skip";
+    });
+  };
+}
+
 export async function renderDoc({ markdown, generated = {}, slug, file, repo, ref, path }) {
   const headings = [];
   const output = await unified()
@@ -51,6 +76,7 @@ export async function renderDoc({ markdown, generated = {}, slug, file, repo, re
     .use(rehypeSanitize)
     .use(rehypeSlug)
     .use(collectHeadings(headings))
+    .use(wrapTables)
     .use(rehypeAutolinkHeadings, {
       behavior: "append",
       properties: { className: ["heading-anchor"], ariaLabel: "Link to this section" },

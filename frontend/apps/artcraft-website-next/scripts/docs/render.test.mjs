@@ -27,6 +27,12 @@ test("adds heading ids, anchors and a heading list", async () => {
   ]);
 });
 
+test("wraps tables in a labelled, focusable scroll region", async () => {
+  const { html } = await render("## Sizes\n\n| A | B |\n| - | - |\n| 1 | 2 |");
+  assert.match(html, /<div class="table-scroll" role="region" tabindex="0" aria-label="Sizes \(table\)"><table>/);
+  assert.match(html, /<\/table><\/div>/);
+});
+
 test("renders GFM tables, code and generated content", async () => {
   const { html } = await render("## M\n\n<!-- generated:artcraft-models -->\n\n```bash\necho hi\n```", {
     generated: { "artcraft-models": "| Model |\n| --- |\n| Veo 3 |" },
