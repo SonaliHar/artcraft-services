@@ -508,6 +508,53 @@ html[data-ruler="on"]::-webkit-scrollbar {
   height: auto;
   max-height: 70vh;
 }
+.article-content ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+  counter-reset: item;
+}
+.article-content ol > li {
+  counter-increment: item;
+}
+.article-content ol > li::before {
+  content: counter(item) ".";
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+.article-content table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+}
+.article-content th,
+.article-content td {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.article-content th {
+  background: var(--bg-sunken);
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+.article-content :is(h2, h3) {
+  scroll-margin-top: 5rem;
+}
+.article-content .heading-anchor {
+  margin-left: 0.4em;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0;
+}
+.article-content :is(h2, h3):hover .heading-anchor,
+.article-content .heading-anchor:focus-visible {
+  opacity: 1;
+}
 
 /* Mono capability marquee. Duplicated track scrolls -50%; the reduced-motion
  * blanket below freezes it in place. */

@@ -24,6 +24,7 @@ const NAV_ITEMS: NavEntry[] = [
   {
     name: "Resources",
     children: [
+      { name: "Docs", href: "/docs" },
       { name: "Tutorials", href: "/tutorials" },
       { name: "News", href: "/news" },
       { name: "FAQ", href: "/faq" },

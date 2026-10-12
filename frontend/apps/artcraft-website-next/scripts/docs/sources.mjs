@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 
 export const DOC_SOURCES = [
   { slug: "artcraft", name: "ArtCraft", repo: "storytold/artcraft", branch: "main", path: "docs/user" },
-  { slug: "craft-launcher", name: "Craft Launcher", repo: "storytold/craft-launcher", branch: "main", path: "docs/user" },
+  { slug: "craft-launcher", name: "ArtCraft Launcher", repo: "storytold/craft-launcher", branch: "main", path: "docs/user" },
 ];
 
 // Static segments under /docs that an app slug must never shadow.
