@@ -65,6 +65,8 @@ const nextConfig: NextConfig = {
   // clips use a same-origin proxy. Other marketing media lives in public/.
   async rewrites() {
     return [
+      // Raw Markdown for every docs page: /docs/<app>/<file>.md.
+      { source: "/docs/:app/:file(.+\\.md)", destination: "/docs-raw/:app/:file" },
       // Showcase clips for the hero wall (see cdnMediaUrl in lib/links.ts).
       {
         source: "/cdn-media/:path*",

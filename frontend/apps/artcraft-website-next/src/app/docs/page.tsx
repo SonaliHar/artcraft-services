@@ -3,6 +3,7 @@ import Link from "next/link";
 import RevealManager from "@/components/reveal-manager";
 import { SectionShell } from "@/components/landing/section-shell";
 import { Accent, PageHeader } from "@/components/page/page-header";
+import DocsSearch from "@/components/docs/docs-search";
 import { docHref, getDocApps } from "@/lib/docs";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function DocsHome() {
       />
       <SectionShell>
         <div className="px-6 py-12 md:px-10">
+          <div className="mb-10"><DocsSearch /></div>
           {apps.length === 0 ? (
             <p className="text-muted">Docs are on their way.</p>
           ) : (
