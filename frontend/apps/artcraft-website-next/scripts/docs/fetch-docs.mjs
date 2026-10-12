@@ -12,7 +12,8 @@
 // runtime keeps between builds), DOCS_FIXTURE_DIR (copy local folders instead
 // of downloading; used by Playwright), DOCS_LOCAL_SOURCES=slug=path,slug=path
 // (preview local docs folders for those apps; others still download),
-// DOCS_SKIP_FETCH=1 (use the cache as-is), GITHUB_TOKEN (optional).
+// DOCS_SKIP_FETCH=1 (use the cache as-is), GITHUB_TOKEN (recommended in
+// production: see README.md).
 
 import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -29,15 +30,31 @@ function githubHeaders(accept) {
   return headers;
 }
 
-async function download(source, dest, fetchImpl) {
+// Every request gets its own deadline so one hung connection cannot stall the
+// build; a timed-out source keeps its last good copy like any other failure.
+export const FETCH_TIMEOUT_MS = 15_000;
+
+// "HTTP 403", plus GitHub's rate-limit header and what to do about it.
+export function httpError(what, res) {
+  let message = `${what}: HTTP ${res.status}`;
+  if (res.status === 403 || res.status === 429) {
+    const remaining = res.headers.get("x-ratelimit-remaining");
+    if (remaining !== null) message += ` (x-ratelimit-remaining: ${remaining})`;
+    if (res.status === 429 || remaining === "0") message += ", rate limited — set GITHUB_TOKEN";
+  }
+  return new Error(message);
+}
+
+async function download(source, dest, fetchImpl, timeoutMs) {
+  const signal = () => AbortSignal.timeout(timeoutMs);
   const api = `https://api.github.com/repos/${source.repo}`;
-  const commit = await fetchImpl(`${api}/commits/${source.branch}`, { headers: githubHeaders("application/vnd.github.sha") });
-  if (!commit.ok) throw new Error(`commit lookup failed: HTTP ${commit.status}`);
+  const commit = await fetchImpl(`${api}/commits/${source.branch}`, { headers: githubHeaders("application/vnd.github.sha"), signal: signal() });
+  if (!commit.ok) throw httpError("commit lookup failed", commit);
   const sha = (await commit.text()).trim();
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error("commit lookup returned no sha");
 
-  const treeRes = await fetchImpl(`${api}/git/trees/${sha}?recursive=1`, { headers: githubHeaders("application/vnd.github+json") });
-  if (!treeRes.ok) throw new Error(`file listing failed: HTTP ${treeRes.status}`);
+  const treeRes = await fetchImpl(`${api}/git/trees/${sha}?recursive=1`, { headers: githubHeaders("application/vnd.github+json"), signal: signal() });
+  if (!treeRes.ok) throw httpError("file listing failed", treeRes);
   const tree = await treeRes.json();
   if (tree.truncated) throw new Error("file listing was truncated by GitHub");
 
@@ -57,14 +74,14 @@ async function download(source, dest, fetchImpl) {
       continue;
     }
     const url = `https://raw.githubusercontent.com/${source.repo}/${sha}/${entry.path.split("/").map(encodeURIComponent).join("/")}`;
-    const res = await fetchImpl(url);
-    if (!res.ok) throw new Error(`download of ${entry.path} failed: HTTP ${res.status}`);
+    const res = await fetchImpl(url, { signal: signal() });
+    if (!res.ok) throw httpError(`download of ${entry.path} failed`, res);
     writeFileSync(out, await res.text());
   }
   return sha;
 }
 
-export async function fetchAll({ sources = DOC_SOURCES, cacheDir = docsCacheDir(), fetchImpl = fetch, fixtureDir, localDirs = {}, log = console } = {}) {
+export async function fetchAll({ sources = DOC_SOURCES, cacheDir = docsCacheDir(), fetchImpl = fetch, fixtureDir, localDirs = {}, log = console, timeoutMs = FETCH_TIMEOUT_MS } = {}) {
   mkdirSync(cacheDir, { recursive: true });
   const summary = {};
 
@@ -80,7 +97,7 @@ export async function fetchAll({ sources = DOC_SOURCES, cacheDir = docsCacheDir(
         if (!existsSync(from)) throw new Error(`no local folder at ${from}`);
         cpSync(from, tmp, { recursive: true });
       } else {
-        sha = await download(source, tmp, fetchImpl);
+        sha = await download(source, tmp, fetchImpl, timeoutMs);
       }
       const { errors, warnings } = validatePages(collectPages(tmp));
       for (const warning of warnings) log.warn(`[docs] ${source.slug}: ${warning}`);
@@ -104,7 +121,7 @@ export async function fetchAll({ sources = DOC_SOURCES, cacheDir = docsCacheDir(
     try {
       const markdown = fixtureDir
         ? readFileSync(join(fixtureDir, "_generated", `${id}.md`), "utf8")
-        : await generate(fetchImpl);
+        : await generate(fetchImpl, { timeoutMs });
       writeFileSync(out, markdown);
       summary[`generated:${id}`] = "updated";
     } catch (err) {

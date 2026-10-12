@@ -82,6 +82,61 @@ test("keeps the last good copy when GitHub fails, the tree is truncated, or the 
   assert.ok(!existsSync(join(cache, ".tmp-artcraft")));
 });
 
+// A request that never answers, except by honouring its abort signal.
+const hanging = (url, init = {}) =>
+  new Promise((_resolve, reject) => {
+    if (!init.signal) return; // no signal: hangs forever and the test times out
+    init.signal.addEventListener("abort", () => reject(init.signal.reason), { once: true });
+  });
+
+test("a hung request is aborted and the source keeps its last good copy", { timeout: 5_000 }, async () => {
+  const cache = mkdtempSync(join(tmpdir(), "craft-cache-"));
+  await run(cache, fakeGitHub({ "docs/user/index.md": { content: page("Good") } }).fetchImpl);
+  const warnings = [];
+  const summary = await fetchAll({
+    sources: [SOURCE],
+    cacheDir: cache,
+    fetchImpl: hanging,
+    timeoutMs: 50,
+    log: { warn: (m) => warnings.push(m), log: () => {} },
+  });
+  assert.equal(summary.artcraft, "kept");
+  assert.equal(summary["generated:artcraft-models"], "kept");
+  assert.match(warnings.join("\n"), /artcraft: .*(timed out|aborted|timeout)/i);
+  assert.match(readFileSync(join(cache, "artcraft/index.md"), "utf8"), /Good/);
+});
+
+test("every request carries a timeout signal", async () => {
+  const cache = mkdtempSync(join(tmpdir(), "craft-cache-"));
+  const { fetchImpl } = fakeGitHub({ "docs/user/index.md": { content: page("Good") } });
+  const unsignalled = [];
+  await fetchAll({
+    sources: [SOURCE],
+    cacheDir: cache,
+    fetchImpl: (url, init = {}) => {
+      if (!(init.signal instanceof AbortSignal)) unsignalled.push(url);
+      return fetchImpl(url, init);
+    },
+    log: quiet,
+  });
+  assert.deepEqual(unsignalled, []);
+});
+
+test("a rate-limited GitHub answer says to set GITHUB_TOKEN", async () => {
+  const cache = mkdtempSync(join(tmpdir(), "craft-cache-"));
+  const warnings = [];
+  await fetchAll({
+    sources: [SOURCE],
+    cacheDir: cache,
+    fetchImpl: async () => new Response("rate limit", { status: 403, headers: { "x-ratelimit-remaining": "0" } }),
+    log: { warn: (m) => warnings.push(m), log: () => {} },
+  });
+  const joined = warnings.join("\n");
+  assert.match(joined, /HTTP 403/);
+  assert.match(joined, /x-ratelimit-remaining: 0/);
+  assert.match(joined, /rate limited — set GITHUB_TOKEN/);
+});
+
 test("a repo without docs/user is left out without failing", async () => {
   const cache = mkdtempSync(join(tmpdir(), "craft-cache-"));
   const warnings = [];

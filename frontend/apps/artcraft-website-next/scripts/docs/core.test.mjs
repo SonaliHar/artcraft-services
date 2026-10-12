@@ -9,6 +9,7 @@ import {
   collectPages,
   docHref,
   expandGenerated,
+  GENERATED_IDS,
   pageUrlPath,
   parseFrontmatter,
   rawHref,
@@ -129,6 +130,31 @@ test("expands generated markers and marks unknown ones", () => {
   const out = expandGenerated(md, { "artcraft-models": "| A |\n| - |\n| 1 |" });
   assert.match(out, /\| A \|/);
   assert.match(out, /_This list is temporarily unavailable\._/);
+});
+
+test("generated markers named like Object.prototype keys do not throw", () => {
+  const md = "<!-- generated:constructor -->\n\n<!-- generated:__proto__ -->\n\n<!-- generated:to-string -->\n";
+  let out;
+  assert.doesNotThrow(() => {
+    out = expandGenerated(md, {});
+  });
+  assert.equal(out.match(/_This list is temporarily unavailable\._/g).length, 2);
+  assert.doesNotThrow(() => expandGenerated("<!-- generated:constructor -->\n", { "artcraft-models": "x" }));
+});
+
+test("only known generated ids pass the check, markers in code are ignored", () => {
+  assert.ok(GENERATED_IDS.has("artcraft-models"));
+  const { errors } = check({
+    "index.md": page(
+      "Home",
+      "",
+      "## A\n\n<!-- generated:artcraft-models -->\n\n<!-- generated:constructor -->\n\n```md\n<!-- generated:in-a-fence -->\n```\n",
+    ),
+  });
+  const joined = errors.join("\n");
+  assert.match(joined, /index\.md: unknown generated id "constructor"/);
+  assert.doesNotMatch(joined, /artcraft-models/);
+  assert.doesNotMatch(joined, /in-a-fence/);
 });
 
 test("CLI exits 1 with readable errors, 0 when clean, 2 when the folder is missing", () => {

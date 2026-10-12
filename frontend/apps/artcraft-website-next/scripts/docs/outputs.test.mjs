@@ -20,6 +20,15 @@ test("llms.txt lists every page as a Markdown link with its description", () => 
   assert.match(text, /https:\/\/getartcraft\.com\/docs\/agents\/support\.md/);
 });
 
+test("llms.txt escapes square brackets in page titles so the link stays a link", () => {
+  const bracketed = {
+    ...app,
+    pages: [{ file: "faq/beta.md", urlPath: "faq/beta", title: "What does [Beta] mean? [x]", description: "Labels.", body: "## A\n" }],
+  };
+  const text = llmsIndex([bracketed], SITE);
+  assert.match(text, /^- \[What does \\\[Beta\\\] mean\? \\\[x\\\]\]\(https:\/\/getartcraft\.com\/docs\/artcraft\/faq\/beta\.md\): Labels\.$/m);
+});
+
 test("llms-full.txt has every page with its URL and generated content", () => {
   const text = llmsFull(app, { "artcraft-models": "| Veo 3 |" }, SITE);
   assert.match(text, /URL: https:\/\/getartcraft\.com\/docs\/artcraft\/reference\/models/);

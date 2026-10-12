@@ -27,6 +27,13 @@ test("adds heading ids, anchors and a heading list", async () => {
   ]);
 });
 
+test("each heading anchor is labelled with its own heading", async () => {
+  const { html } = await render("## Step one\n\n### Install `the app`");
+  assert.match(html, /<a[^>]*aria-label="Link to section: Step one"[^>]*href="#step-one"|<a[^>]*href="#step-one"[^>]*aria-label="Link to section: Step one"/);
+  assert.match(html, /aria-label="Link to section: Install the app"/);
+  assert.doesNotMatch(html, /Link to this section/);
+});
+
 test("wraps tables in a labelled, focusable scroll region", async () => {
   const { html } = await render("## Sizes\n\n| A | B |\n| - | - |\n| 1 | 2 |");
   assert.match(html, /<div class="table-scroll" role="region" tabindex="0" aria-label="Sizes \(table\)"><table>/);

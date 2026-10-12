@@ -35,6 +35,10 @@ async function writeClipboard(value: CopyButtonProps["value"]) {
   try {
     if (typeof ClipboardItem !== "undefined" && clipboard.write) {
       const blob = text.then((t) => new Blob([t], { type: "text/plain" }));
+      // If the write fails first (say, permission denied), nothing awaits
+      // `text` any more; mark it handled so a later load failure is not an
+      // unhandled rejection. The write still sees it through `blob`.
+      text.catch(() => {});
       return await clipboard.write([new ClipboardItem({ "text/plain": blob })]);
     }
     return await clipboard.writeText(await text);

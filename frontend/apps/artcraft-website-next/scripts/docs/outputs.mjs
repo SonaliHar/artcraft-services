@@ -5,6 +5,10 @@ import { docHref, expandGenerated, rawHref } from "./core.mjs";
 
 const byFile = (app) => [...app.pages].sort((a, b) => a.file.localeCompare(b.file));
 
+// A title inside [link text]: a bare bracket would end the text early and
+// break the link (backslashes first, so existing escapes stay literal).
+const linkText = (title) => title.replace(/[\\[\]]/g, "\\$&");
+
 export function llmsIndex(apps, siteUrl) {
   const lines = [
     "# Craft docs",
@@ -17,7 +21,7 @@ export function llmsIndex(apps, siteUrl) {
   for (const app of apps) {
     lines.push(`## ${app.name}`, "", `- [All ${app.name} docs in one file](${siteUrl}/docs/${app.slug}/llms-full.txt)`);
     for (const page of byFile(app)) {
-      lines.push(`- [${page.title}](${siteUrl}${rawHref(app.slug, page.file)}): ${page.description}`);
+      lines.push(`- [${linkText(page.title)}](${siteUrl}${rawHref(app.slug, page.file)}): ${page.description}`);
     }
     lines.push("");
   }

@@ -114,7 +114,11 @@ export async function renderDoc({ markdown, generated = {}, slug, file, repo, re
     .use(wrapCodeBlocks)
     .use(rehypeAutolinkHeadings, {
       behavior: "append",
-      properties: { className: ["heading-anchor"], ariaLabel: "Link to this section" },
+      // Named per heading, so a screen reader's link list tells them apart.
+      properties: (heading) => ({
+        className: ["heading-anchor"],
+        ariaLabel: `Link to section: ${toString(heading).trim()}`,
+      }),
       content: { type: "text", value: "#" },
     })
     .use(rehypeStringify)

@@ -19,7 +19,8 @@ under `docs/user/`, so a gap in the docs is fixed with a PR to that repo.
 
 - Reply in at most ~1500 characters, plain words, ready to paste into Discord.
 - Link the exact page, and the section when there is one: `https://getartcraft.com/docs/<app>/<page>#<heading-id>`.
-  Heading ids are the heading text in lowercase with spaces turned into `-`.
+  To get the section link, copy it from the `#` next to the heading (it gives the full URL), or
+  slug the heading the way GitHub does.
 - If the page's "Checked against" version (in the page footer, or `verified:` in its `.md`) is
   older than the latest release (`gh release view -R storytold/<repo> --json tagName`), check the
   claim against the code first. If the docs are wrong, answer correctly and fix the page (step 3).

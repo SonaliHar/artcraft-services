@@ -12,9 +12,14 @@ const SKIP_FILES = new Set(["agents.md", "claude.md", "readme.md"]);
 const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SCHEME_OR_ROOT = /^(?:[a-z][a-z0-9+.-]*:|#|\/)/i;
 export const GENERATED_MARKER = /^<!--\s*generated:([a-z0-9-]+)\s*-->[ \t]*$/gm;
+// The generators the website knows (scripts/docs/generated.mjs GENERATORS;
+// a test keeps the two in step). Kept here so the repos' checker, which
+// downloads only this file, can reject a typo before it ships.
+export const GENERATED_IDS = new Set(["artcraft-models"]);
+const FENCED_CODE = /^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gm;
 
 export function parseFrontmatter(raw) {
-  const text = raw.replace(/^﻿/, "").replace(/\r\n/g, "\n");
+  const text = raw.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   const lines = text.split("\n");
   if (lines[0] !== "---") {
     return { data: {}, body: text, errors: ["missing frontmatter (--- block at the top)"] };
@@ -135,8 +140,12 @@ export function validatePages({ pages, assets }) {
     if (p.data.verified !== undefined && !/^\d+\.\d+(?:\.\d+)?$/.test(String(p.data.verified))) {
       warnings.push(`${p.file}: "verified" should look like 1.2.3`);
     }
-    if (/^# /m.test(p.body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, ""))) {
+    const prose = p.body.replace(FENCED_CODE, "");
+    if (/^# /m.test(prose)) {
       warnings.push(`${p.file}: start the body at ## (the title comes from frontmatter)`);
+    }
+    for (const [, id] of prose.matchAll(GENERATED_MARKER)) {
+      if (!GENERATED_IDS.has(id)) error(`unknown generated id "${id}"`);
     }
     if (urls.has(p.urlPath)) error(`same URL as ${urls.get(p.urlPath)}`);
     else urls.set(p.urlPath, p.file);
@@ -162,10 +171,13 @@ export function validatePages({ pages, assets }) {
   return { errors, warnings };
 }
 
+// Own keys only: a marker like generated:constructor must not reach
+// Object.prototype (that threw and failed the whole build).
 export function expandGenerated(markdown, generated) {
-  return markdown.replace(
-    GENERATED_MARKER,
-    (_line, id) => generated[id]?.trim() ?? "_This list is temporarily unavailable._",
+  return markdown.replace(GENERATED_MARKER, (_line, id) =>
+    Object.hasOwn(generated, id) && typeof generated[id] === "string"
+      ? generated[id].trim()
+      : "_This list is temporarily unavailable._",
   );
 }
 
