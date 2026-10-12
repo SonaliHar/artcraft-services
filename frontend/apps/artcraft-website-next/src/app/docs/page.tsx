@@ -3,12 +3,14 @@ import Link from "next/link";
 import RevealManager from "@/components/reveal-manager";
 import { SectionEyebrow, SectionShell } from "@/components/landing/section-shell";
 import { Accent, PageHeader } from "@/components/page/page-header";
-import DocsAppMark from "@/components/docs/docs-app-mark";
+import { appThemeClass } from "@/components/apps/app-wordmark";
+import DocsAppMark, { DocsAppName } from "@/components/docs/docs-app-mark";
 import DocsSearch from "@/components/docs/docs-search";
 import {
   type DocApp,
   type NavNode,
   docAppIcon,
+  docCraftApp,
   docHref,
   getDocApps,
   getDocNav,
@@ -69,13 +71,13 @@ export default function DocsHome() {
               <SectionEyebrow index="03" label="Common fixes" annotation="Find your symptom" />
               <ul className="grid gap-px bg-line md:grid-cols-2">
                 {fixes.map(({ app, page }) => (
-                  <li key={`${app.slug}/${page.urlPath}`} className="bg-bg">
+                  <li key={`${app.slug}/${page.urlPath}`} className={`bg-bg ${themeOf(app)}`}>
                     <Link
                       href={docHref(app.slug, page.urlPath)}
                       className="group flex h-full flex-col gap-2 px-6 py-5 hover:bg-bg-sunken focus-visible:-outline-offset-2 md:px-10 md:py-6"
                     >
-                      <span className="hud-label text-faint">{app.name}</span>
-                      <span className="font-medium leading-snug text-ink-strong group-hover:text-accent-ink">
+                      <span className="hud-label text-(--app-ink,var(--faint))">{app.name}</span>
+                      <span className="font-medium leading-snug text-ink-strong group-hover:text-(--app-ink,var(--accent-ink))">
                         {page.title}
                       </span>
                       {page.description && (
@@ -93,11 +95,20 @@ export default function DocsHome() {
   );
 }
 
+// A Craft app's card wears its color (see the docs article page).
+function themeOf(app: DocApp): string {
+  const craft = docCraftApp(app);
+  return craft ? appThemeClass(craft) : "";
+}
+
+// Each card spans two rows of the parent grid (header, section list) through
+// a subgrid, so side-by-side cards start their lists on the same line however
+// their descriptions wrap.
 function AppCard({ app }: { app: DocApp }) {
   const home = app.pages.find((page) => page.urlPath === "");
   const sections = getDocNav(app).filter((node) => node.href !== docHref(app.slug, ""));
   return (
-    <li className="flex flex-col bg-bg">
+    <li className={`flex flex-col bg-bg md:row-span-2 md:grid md:grid-rows-subgrid ${themeOf(app)}`}>
       <Link
         href={docHref(app.slug, "")}
         className="group flex items-start gap-4 px-6 pt-8 pb-6 hover:bg-bg-sunken focus-visible:-outline-offset-2 md:px-10"
@@ -105,8 +116,8 @@ function AppCard({ app }: { app: DocApp }) {
         <DocsAppMark name={app.name} icon={docAppIcon(app)} className="h-12 w-12" />
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-4">
-            <span className="font-display text-2xl leading-tight tracking-[-0.03em] text-ink-strong group-hover:text-accent-ink">
-              {app.name}
+            <span className="font-display text-2xl leading-tight tracking-[-0.03em] text-ink-strong group-hover:text-(--app-ink,var(--accent-ink))">
+              <DocsAppName name={app.name} craft={docCraftApp(app)} />
             </span>
             <span className="hud-label shrink-0 text-faint">{app.pages.length} pages</span>
           </span>

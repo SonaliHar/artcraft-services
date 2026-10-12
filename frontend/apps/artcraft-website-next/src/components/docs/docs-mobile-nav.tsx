@@ -11,11 +11,14 @@ export function DocsMenuDisclosure({
   nav,
   currentHref,
   section,
+  mark,
   className,
 }: {
   nav: NavNode[];
   currentHref: string;
   section: string;
+  /** The app's icon: on phones the sidebar header is hidden, so the menu bar carries it. */
+  mark?: ReactNode;
   className?: string;
 }) {
   return (
@@ -25,6 +28,7 @@ export function DocsMenuDisclosure({
       className={className}
       summary={
         <>
+          {mark}
           <span className="text-ink">Menu</span>
           <span aria-hidden className="text-faint">·</span>
           <span className="truncate text-muted">{section}</span>

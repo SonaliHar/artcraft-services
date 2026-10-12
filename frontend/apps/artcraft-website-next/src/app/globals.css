@@ -533,6 +533,11 @@ html[data-ruler="on"]::-webkit-scrollbar {
 .docs-article .article-content ul > li::before {
   color: var(--line-strong);
 }
+/* Inside a Craft app's docs (an .app-<slug> ancestor) links take the app's
+   AA text shade; elsewhere --app-ink is unset and they stay the site blue. */
+.docs-article .article-content a {
+  color: var(--app-ink, var(--accent-ink));
+}
 .docs-article .article-content hr {
   margin: 2.5rem 0;
   border: 0;
@@ -600,7 +605,7 @@ html[data-ruler="on"]::-webkit-scrollbar {
   margin: 1.75rem 0;
   padding: 0.875rem 1.25rem 1rem;
   border: 1px solid var(--line);
-  border-left: 2px solid var(--accent);
+  border-left: 2px solid var(--app-ink, var(--accent));
   background: var(--bg-raised);
   color: var(--ink);
   font-family: var(--font-body);
@@ -611,7 +616,7 @@ html[data-ruler="on"]::-webkit-scrollbar {
   content: "Note";
   display: block;
   margin-bottom: 0.375rem;
-  color: var(--accent-ink);
+  color: var(--app-ink, var(--accent-ink));
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
@@ -776,7 +781,7 @@ html[data-ruler="on"]::-webkit-scrollbar {
   opacity: 1;
 }
 .docs-article .article-content .heading-anchor:hover {
-  color: var(--accent-ink);
+  color: var(--app-ink, var(--accent-ink));
 }
 /* No hover on touch screens: the anchor is always there, quieter, with a
    finger-sized hit area. */

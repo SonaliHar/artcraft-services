@@ -75,7 +75,7 @@ export default function DocsToc({ headings, className }: { headings: DocHeading[
                   "-ml-px block border-l-2 py-1.5 pr-2 text-[0.8125rem] leading-snug transition-colors duration-150",
                   heading.depth === 3 ? "pl-7" : "pl-4",
                   current
-                    ? "border-accent text-ink-strong"
+                    ? "border-(--app-ink,var(--accent)) text-ink-strong"
                     : "border-transparent text-muted hover:border-line-strong hover:text-ink",
                 )}
               >

@@ -14,6 +14,37 @@ test("sources have unique kebab slugs that do not collide with /docs routes", ()
   }
 });
 
+test("every Craft app is a source, named as on /apps", () => {
+  const crafts = {
+    photocraft: "PhotoCraft",
+    vectorcraft: "VectorCraft",
+    filmcraft: "FilmCraft",
+    lightcraft: "LightCraft",
+    pdfcraft: "PdfCraft",
+    effectcraft: "EffectCraft",
+    designcraft: "DesignCraft",
+    wordcraft: "WordCraft",
+    soundcraft: "SoundCraft",
+    deckcraft: "DeckCraft",
+    cadcraft: "CADCraft",
+    gridcraft: "GridCraft",
+  };
+  const expected = [
+    { slug: "artcraft", name: "ArtCraft", repo: "storytold/artcraft" },
+    { slug: "craft-launcher", name: "ArtCraft Launcher", repo: "storytold/craft-launcher" },
+    ...Object.entries(crafts).map(([slug, name]) => ({ slug, name, repo: `storytold/${slug}` })),
+  ];
+  assert.equal(DOC_SOURCES.length, 14);
+  assert.deepEqual(
+    DOC_SOURCES.map(({ slug, name, repo }) => ({ slug, name, repo })),
+    expected,
+  );
+  for (const s of DOC_SOURCES) {
+    assert.equal(s.branch, "main");
+    assert.equal(s.path, "docs/user");
+  }
+});
+
 test("cache dir is absolute and honours DOCS_CACHE_DIR", () => {
   assert.ok(isAbsolute(docsCacheDir()));
   process.env.DOCS_CACHE_DIR = "tmp/x";

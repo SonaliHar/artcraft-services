@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import RevealManager from "@/components/reveal-manager";
 import { SectionShell } from "@/components/landing/section-shell";
 import { ArticleBody } from "@/components/page/page-header";
-import DocsAppMark from "@/components/docs/docs-app-mark";
+import { appThemeClass } from "@/components/apps/app-wordmark";
+import DocsAppMark, { DocsAppName } from "@/components/docs/docs-app-mark";
 import DocsBreadcrumbs, { type Crumb } from "@/components/docs/docs-breadcrumbs";
 import DocsCodeCopy from "@/components/docs/docs-code-copy";
 import DocsHeadingLinks from "@/components/docs/docs-heading-links";
@@ -16,6 +17,7 @@ import DocsSidebar from "@/components/docs/docs-sidebar";
 import DocsToc from "@/components/docs/docs-toc";
 import {
   docAppIcon,
+  docCraftApp,
   docEditUrl,
   docHref,
   findDocPage,
@@ -71,24 +73,31 @@ export default async function DocsPage({ params }: { params: Params }) {
   const { prev, next } = getDocPager(app, href);
   const crumbs: Crumb[] = [
     { title: "Docs", href: "/docs" },
-    { title: app.name, href: appHome, current: href === appHome },
+    { title: app.name, href: appHome, current: href === appHome, app: true },
     ...navPath.slice(0, -1).map((node) => ({ title: node.title, href: node.href })),
   ];
   const section = navPath[0]?.title ?? page.title;
   const minutes = readingMinutes(page);
+  // A Craft app's pages wear its color: the theme class sets --app/--app-ink,
+  // which the docs accents read with the site blue as fallback, so ArtCraft
+  // and the launcher stay blue.
+  const craft = docCraftApp(app);
+  const icon = docAppIcon(app);
 
   return (
-    <>
+    <div className={craft ? appThemeClass(craft) : undefined}>
       <RevealManager />
 
       <SectionShell>
         <header className={`grid ${COLUMNS}`}>
           <div className="hidden border-r border-line px-6 py-10 md:block md:py-14">
-            <Link href={appHome} className="group flex items-center gap-3">
-              <DocsAppMark name={app.name} icon={docAppIcon(app)} />
+            {/* The app's lockup: its icon at the size /apps cards use, the
+                wordmark under it, then the "Docs" label. */}
+            <Link href={appHome} className="group flex flex-col items-start gap-4">
+              <DocsAppMark name={app.name} icon={icon} className="h-14 w-14" />
               <span className="min-w-0">
-                <span className="block font-display text-base leading-tight tracking-[-0.02em] text-ink-strong group-hover:text-accent-ink">
-                  {app.name}
+                <span className="block font-display text-xl leading-tight tracking-[-0.03em] text-ink-strong group-hover:text-(--app-ink,var(--accent-ink))">
+                  <DocsAppName name={app.name} craft={craft} />
                 </span>
                 <span className="hud-label block text-faint">Docs</span>
               </span>
@@ -128,7 +137,13 @@ export default async function DocsPage({ params }: { params: Params }) {
           </aside>
 
           <div className="min-w-0">
-            <DocsMenuDisclosure nav={nav} currentHref={href} section={section} className="md:hidden" />
+            <DocsMenuDisclosure
+              nav={nav}
+              currentHref={href}
+              section={section}
+              mark={<DocsAppMark name={app.name} icon={icon} className="h-5 w-5 drop-shadow-none" />}
+              className="md:hidden"
+            />
             <DocsTocDisclosure headings={headings} className="xl:hidden" />
             <div className="docs-article relative">
               <ArticleBody html={html} />
@@ -154,6 +169,6 @@ export default async function DocsPage({ params }: { params: Params }) {
           </aside>
         </div>
       </SectionShell>
-    </>
+    </div>
   );
 }

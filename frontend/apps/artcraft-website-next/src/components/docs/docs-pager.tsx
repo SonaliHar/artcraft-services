@@ -28,7 +28,7 @@ function PagerCell({ link, direction }: { link: DocLink; direction: "prev" | "ne
         {isNext ? "Next" : "Previous"}
         {isNext && <Icon aria-hidden className="h-3.5 w-3.5" />}
       </span>
-      <span className="font-display text-lg leading-tight tracking-[-0.02em] text-ink-strong md:text-xl">
+      <span className="font-display text-lg leading-tight tracking-[-0.02em] text-ink-strong group-hover/pager:text-(--app-ink,var(--accent-ink)) md:text-xl">
         {link.title}
       </span>
     </Link>

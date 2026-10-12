@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { type CraftApp, craftAppIconUrl, getCraftApp } from "./crafting-apps";
 import { SITE_URL } from "./links";
 import { docHref, rawHref } from "../../scripts/docs/core.mjs";
 import { DOC_SOURCES, docsCacheDir } from "../../scripts/docs/sources.mjs";
@@ -102,13 +103,25 @@ export function getTroubleshootingPages(app: DocApp): DocPage[] {
     .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
-// The app's icon for docs cards and headers: a Craft app's tile where one
-// ships in public/, the ArtCraft mark (drawn in theme ink), else null for a
-// monogram.
-export function docAppIcon(app: DocApp): { src: string; themed: boolean } | null {
-  if (app.slug === "artcraft") return { src: "/artcraft-icon.svg", themed: true };
-  const tile = `/images/apps/${app.slug}/icon.webp`;
-  return existsSync(join(process.cwd(), "public", tile)) ? { src: tile, themed: false } : null;
+// The Craft app behind a docs source (its color, wordmark and icon), or
+// undefined for ArtCraft, the launcher and any future non-Craft source.
+export function docCraftApp(app: Pick<DocApp, "slug">): CraftApp | undefined {
+  return getCraftApp(app.slug);
+}
+
+// How an app's icon is drawn in docs:
+// "tile"  a Craft app's engraved-animal tile (the same file /apps uses);
+// "ink"   the ArtCraft "A", drawn in the theme's ink;
+// "brand" the blue ArtCraft "A", which is ArtCraft Launcher's own app icon
+//         (craft-launcher/assets/app-icon: never recolor or crop it).
+export type DocAppIcon = { src: string; kind: "tile" | "ink" | "brand" };
+
+// null leaves a monogram, for a future source that ships no icon.
+export function docAppIcon(app: Pick<DocApp, "slug">): DocAppIcon | null {
+  if (app.slug === "artcraft") return { src: "/artcraft-icon.svg", kind: "ink" };
+  if (app.slug === "craft-launcher") return { src: "/artcraft-icon.svg", kind: "brand" };
+  const craft = docCraftApp(app);
+  return craft ? { src: craftAppIconUrl(craft), kind: "tile" } : null;
 }
 
 // Reading time at ~200 words a minute, at least one minute.

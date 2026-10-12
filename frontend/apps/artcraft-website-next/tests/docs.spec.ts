@@ -6,6 +6,40 @@ test("app home renders through the optional catch-all", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "Docs" }).getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
 });
 
+test("a Craft app's docs carry its icon and color", async ({ page }) => {
+  await page.goto("/docs/photocraft");
+  await expect(page.getByRole("heading", { level: 1, name: "Fixture PhotoCraft" })).toBeVisible();
+  const header = page.getByRole("link", { name: "PhotoCraft Docs" });
+  const icon = header.locator('img[src*="/images/apps/photocraft/icon.webp"]');
+  await expect(icon).toBeVisible();
+  await expect(icon).toHaveAttribute("alt", "");
+  await expect(icon).toHaveAttribute("width", /\d+/);
+  await expect(icon).toHaveAttribute("height", /\d+/);
+  await expect(page.locator("div.app-photocraft").filter({ has: page.getByRole("heading", { level: 1 }) })).toHaveCount(1);
+});
+
+test("ArtCraft keeps its mark and the site blue", async ({ page }) => {
+  await page.goto("/docs/artcraft");
+  await expect(page.getByRole("link", { name: "ArtCraft Docs" }).locator('img[src="/artcraft-icon.svg"]')).toBeVisible();
+  await expect(page.locator("[class*='app-']").filter({ has: page.getByRole("heading", { level: 1 }) })).toHaveCount(0);
+});
+
+test("docs home has one card per app with its icon and no monograms", async ({ page }) => {
+  await page.goto("/docs");
+  const cards = page.getByRole("list").filter({ has: page.getByRole("link", { name: /^PhotoCraft/ }) });
+  await expect(cards.getByRole("link", { name: /^ArtCraft/ }).locator('img[src="/artcraft-icon.svg"]')).toBeVisible();
+  await expect(cards.getByRole("link", { name: /^PhotoCraft/ }).locator('img[src*="/images/apps/photocraft/icon.webp"]')).toBeVisible();
+  // The launcher has no fixture, so it is simply absent.
+  await expect(page.getByRole("link", { name: /^ArtCraft Launcher/ })).toHaveCount(0);
+  await expect(page.locator("[data-monogram]")).toHaveCount(0);
+});
+
+test("the phone menu shows the app's icon", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/docs/photocraft");
+  await expect(page.locator("details summary").filter({ hasText: "Menu" }).locator('img[src*="/images/apps/photocraft/icon.webp"]')).toBeVisible();
+});
+
 test("a guide renders with sidebar, anchors, table and rewritten links", async ({ page }) => {
   await page.goto("/docs/artcraft/guides/first-guide#step-two");
   await expect(page.getByRole("heading", { level: 1, name: "First guide" })).toBeVisible();

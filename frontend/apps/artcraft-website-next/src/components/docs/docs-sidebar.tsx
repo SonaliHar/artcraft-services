@@ -82,7 +82,7 @@ function PageList({ nodes, currentHref }: { nodes: NavNode[]; currentHref: strin
                 className={twMerge(
                   "-ml-px block border-l-2 py-1.5 pr-2 pl-4 text-sm leading-snug",
                   current
-                    ? "border-accent text-ink-strong"
+                    ? "border-(--app-ink,var(--accent)) text-ink-strong"
                     : "border-transparent text-muted hover:border-line-strong hover:text-ink",
                 )}
               >
