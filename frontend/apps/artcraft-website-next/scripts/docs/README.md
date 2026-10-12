@@ -23,8 +23,9 @@ build falls back to when GitHub is unreachable.
 
 ## Add an app
 
-Add one entry to `sources.mjs`. The app repo copies `docs-check.yml` and
-`docs-publish.yml` from storytold/artcraft.
+Add one entry to `sources.mjs`. The app repo's docs CI (a checker run pinned to a
+commit on this repo's main, plus a rebuild-on-merge call) is added there in its own
+PR.
 
 ## Environment variables
 
@@ -42,10 +43,10 @@ fails on one app.
 
 ## Rebuild hook
 
-Create one Netlify build hook. Store the same URL as the `DOCS_BUILD_HOOK` secret in
-artcraft-services and in each app repo. The nightly workflow
-(`.github/workflows/docs-nightly.yml` at the repo root) also calls it once a day and
-skips quietly when the secret is missing.
+Create one Netlify build hook. Store it as the `DOCS_BUILD_HOOK` secret in
+artcraft-services, and in each app repo once its rebuild-on-merge workflow is added.
+The nightly workflow (`.github/workflows/docs-nightly.yml` at the repo root) also calls
+it once a day and skips quietly when the secret is missing.
 
 Set a `GITHUB_TOKEN` Netlify environment variable (a read-only public-repo token);
 it is recommended for production. Each build makes 2 GitHub API calls per source,
