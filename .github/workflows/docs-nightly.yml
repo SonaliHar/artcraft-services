@@ -1,0 +1,24 @@
+name: docs-nightly
+
+# Rebuilds getartcraft.com once a day so docs changes reach the site even in
+# repos that have no DOCS_BUILD_HOOK secret yet.
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the website build
+        env:
+          HOOK: ${{ secrets.DOCS_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "DOCS_BUILD_HOOK is not set; skipping."
+            exit 0
+          fi
+          curl -fsS -X POST -d '{}' "$HOOK?trigger_title=docs%20nightly"
