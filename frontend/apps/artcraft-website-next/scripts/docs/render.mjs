@@ -66,6 +66,27 @@ function wrapTables() {
   };
 }
 
+// Code blocks sit in a positioned frame so the page script can pin a copy
+// button to the corner without the button scrolling away with long lines.
+// The frame carries the fence language for a small corner label.
+function wrapCodeBlocks() {
+  return (tree) => {
+    visit(tree, "element", (node, index, parent) => {
+      if (node.tagName !== "pre" || !parent || index === undefined) return;
+      const code = node.children.find((child) => child.type === "element" && child.tagName === "code");
+      const classes = [code?.properties?.className ?? []].flat().map(String);
+      const language = classes.find((name) => name.startsWith("language-"))?.slice("language-".length);
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["code-block"], ...(language ? { dataLanguage: language } : {}) },
+        children: [node],
+      };
+      return "skip";
+    });
+  };
+}
+
 export async function renderDoc({ markdown, generated = {}, slug, file, repo, ref, path }) {
   const headings = [];
   const output = await unified()
@@ -77,6 +98,7 @@ export async function renderDoc({ markdown, generated = {}, slug, file, repo, re
     .use(rehypeSlug)
     .use(collectHeadings(headings))
     .use(wrapTables)
+    .use(wrapCodeBlocks)
     .use(rehypeAutolinkHeadings, {
       behavior: "append",
       properties: { className: ["heading-anchor"], ariaLabel: "Link to this section" },

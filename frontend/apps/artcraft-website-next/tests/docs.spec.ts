@@ -34,8 +34,12 @@ test("generated model table is filled in", async ({ page }) => {
 
 test("search finds a page by a heading word", async ({ page }) => {
   await page.goto("/docs");
-  await page.getByLabel("Search the docs").fill("step");
-  await expect(page.getByRole("list", { name: "Search results" }).getByRole("link", { name: /First guide/ })).toBeVisible();
+  await page.getByRole("combobox", { name: "Search the docs" }).fill("step");
+  const result = page.getByRole("listbox", { name: "Search results" }).getByRole("option", { name: /First guide/ });
+  await expect(result).toBeVisible();
+  await expect(result.getByRole("link")).toHaveAttribute("href", "/docs/artcraft/guides/first-guide#step-one");
+  await expect(result.locator("mark", { hasText: /^Step$/ }).first()).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: /\d+ results?/ })).toBeAttached();
 });
 
 test("machine outputs", async ({ request }) => {
@@ -83,4 +87,64 @@ test("mobile menu works and shows the current section", async ({ page }) => {
   await expect(menu.getByRole("link", { name: "First guide" })).toBeHidden();
   await menu.locator("summary").click();
   await expect(menu.getByRole("link", { name: "First guide" })).toHaveAttribute("aria-current", "page");
+});
+
+test("slash focuses search; arrows and Enter open a result at its section", async ({ page }) => {
+  await page.goto("/docs/artcraft/troubleshooting/broken-thing");
+  await page.keyboard.press("/");
+  await expect(page.getByRole("combobox", { name: "Search the docs" })).toBeFocused();
+  await page.keyboard.type("step two");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/docs\/artcraft\/guides\/first-guide#step-two$/);
+});
+
+test("heading anchors copy the full section URL", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.locator("#step-two").hover();
+  await page.locator("#step-two .heading-anchor").click();
+  await expect(page.getByText("Link copied")).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/docs\/artcraft\/guides\/first-guide#step-two$/);
+});
+
+test("code blocks have a copy button", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.locator("article pre").hover();
+  await page.getByRole("button", { name: "Copy code" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("echo hi\n");
+});
+
+test("page actions copy the page link and its Markdown", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.getByRole("button", { name: "Copy link" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://getartcraft.com/docs/artcraft/guides/first-guide");
+  await page.getByRole("button", { name: "Copy as Markdown" }).click();
+  await expect(page.getByRole("button", { name: "Markdown copied" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("## Step two");
+});
+
+test("Ctrl+K focuses search, Escape clears it and typing in a field is left alone", async ({ page }) => {
+  await page.goto("/docs/artcraft/guides/first-guide");
+  const search = page.getByRole("combobox", { name: "Search the docs" });
+  await page.keyboard.press("Control+k");
+  await expect(search).toBeFocused();
+  await page.keyboard.type("guide/");
+  await expect(search).toHaveValue("guide/");
+  await expect(search).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(search).toHaveValue("");
+  await expect(search).not.toBeFocused();
+});
+
+test("on phones slash opens the menu and focuses its search", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/docs/artcraft/guides/first-guide");
+  await page.keyboard.press("/");
+  const search = page.getByRole("combobox", { name: "Search the docs" });
+  await expect(search).toBeFocused();
+  await page.keyboard.type("models");
+  await expect(page.getByRole("option", { name: /Models/ })).toBeVisible();
 });

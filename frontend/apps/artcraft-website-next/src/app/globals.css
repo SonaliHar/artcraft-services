@@ -564,20 +564,27 @@ html[data-ruler="on"]::-webkit-scrollbar {
   align-items: center;
   justify-content: center;
   width: 2rem;
-  height: 1.5rem;
+  /* 25px, not 24: the digits' ink is an odd number of pixels tall, so an
+     even box always leaves them a pixel high or low. */
+  height: 1.5625rem;
   border: 1px solid var(--line-strong);
   background: var(--bg-raised);
   color: var(--ink-strong);
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  /* Tracking also adds space after the last digit, which pulled the pair
+     left of centre. Matching left padding puts it back (text-indent has no
+     effect in a flex box). Measured centred to 1/3px at 3x for 01-12. */
   letter-spacing: 0.06em;
+  padding-left: 0.06em;
   line-height: 1;
 }
 .docs-article .article-content ol > li:not(:last-child)::after {
   content: "";
   position: absolute;
-  top: 1.6875rem;
+  top: 1.75rem;
   bottom: calc(-1.125rem - 0.1875rem);
   left: 1rem;
   width: 1px;
@@ -633,9 +640,68 @@ html[data-ruler="on"]::-webkit-scrollbar {
   font-size: 0.8125rem;
   line-height: 1.7;
 }
+/* Repeats the shared reset: the docs inline-code rule above would otherwise
+   pad and box the code inside every block. */
 .docs-article .article-content pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
   font-size: inherit;
   overflow-wrap: normal;
+}
+
+/* Code block frame (added at render). The copy button sits in the top-right
+   corner over the block, outside the scrolling <pre>. Idle, the corner shows
+   the fence language as a faint HUD label; hover or keyboard focus swaps it
+   for the button. Touch screens have no hover, so the button stays. */
+.docs-article .article-content .code-block {
+  position: relative;
+  margin: 1.5rem 0;
+}
+.docs-article .article-content .code-block > pre {
+  margin: 0;
+}
+.docs-article .article-content .code-block[data-language]::after {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  line-height: 1.5rem;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.docs-article .article-content .code-copy {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.docs-article .article-content .code-block:is(:hover, :focus-within) .code-copy {
+  opacity: 1;
+}
+.docs-article .article-content .code-block[data-copy]:is(:hover, :focus-within)::after {
+  opacity: 0;
+}
+@media (hover: none), (pointer: coarse) {
+  .docs-article .article-content .code-copy {
+    opacity: 1;
+  }
+  .docs-article .article-content .code-block[data-copy]::after {
+    opacity: 0;
+  }
+  /* A strip above the first line, so the always-on button never covers
+     code. */
+  .docs-article .article-content .code-block[data-copy] > pre {
+    padding-top: 2.75rem;
+  }
 }
 
 /* Tables: the wrapper (added at render) scrolls sideways so the table keeps
@@ -694,14 +760,70 @@ html[data-ruler="on"]::-webkit-scrollbar {
   scroll-margin-top: 5rem;
 }
 .docs-article .article-content .heading-anchor {
-  margin-left: 0.4em;
-  color: var(--muted);
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0 0.15em;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 400;
   text-decoration: none;
   opacity: 0;
+  transition: opacity 120ms, color 120ms;
 }
 .docs-article .article-content :is(h2, h3):hover .heading-anchor,
 .docs-article .article-content .heading-anchor:focus-visible {
   opacity: 1;
+}
+.docs-article .article-content .heading-anchor:hover {
+  color: var(--accent-ink);
+}
+/* No hover on touch screens: the anchor is always there, quieter, with a
+   finger-sized hit area. */
+@media (hover: none), (pointer: coarse) {
+  .docs-article .article-content .heading-anchor {
+    opacity: 0.7;
+    padding: 0.2em 0.45em;
+    margin: -0.2em 0 -0.2em 0.1em;
+  }
+}
+
+/* "Link copied" next to a section anchor. Positioned by the page script;
+   always in the tree as a live region, shown only while it has text. */
+.docs-copied {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  background: var(--invert-bg);
+  color: var(--invert-fg);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-0.25rem, -50%);
+  transition: opacity 140ms, transform 140ms;
+}
+.docs-copied[data-above] {
+  transform: translateY(-100%);
+}
+.docs-copied[data-show] {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+.docs-copied[data-show][data-above] {
+  transform: translateY(-100%);
+}
+.docs-copied:empty {
+  padding: 0;
+}
+
+/* Matched query words in search results. */
+.docs-mark {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--ink-strong);
+  box-shadow: 0 1px 0 var(--accent);
 }
 
 /* Mono capability marquee. Duplicated track scrolls -50%; the reduced-motion

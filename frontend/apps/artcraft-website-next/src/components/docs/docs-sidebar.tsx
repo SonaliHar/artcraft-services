@@ -1,30 +1,47 @@
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 import type { NavNode } from "@/lib/docs";
+import DocsSearch from "./docs-search";
 
-// Docs sidebar: the app's folder tree. Top-level entries read as mono section
-// labels (links when the folder has an index page); pages sit on a hairline
-// rail, and the current page carries the accent marker on that rail.
+// The 48px site nav the rail sticks under.
+const RAIL = "sticky top-12 z-20 flex max-h-[calc(100dvh-3rem)] flex-col";
+
+// Docs sidebar: a compact search field, then the app's folder tree.
+// Top-level entries read as mono section labels (links when the folder has an
+// index page); pages sit on a hairline rail, and the current page carries the
+// accent marker on that rail.
+//
+// "rail" is the sticky desktop column: the search stays put while the tree
+// scrolls under it, and the search's results float out over the article
+// (the scrolling part would clip them). "menu" is the same content inside
+// the phone menu.
 export default function DocsSidebar({
   nav,
   currentHref,
-  className,
+  variant = "rail",
 }: {
   nav: NavNode[];
   currentHref: string;
-  className?: string;
+  variant?: "rail" | "menu";
 }) {
+  const rail = variant === "rail";
   return (
-    <nav aria-label="Docs" className={className}>
-      <ul className="space-y-5">
-        {nav.map((node, index) => (
-          <li key={node.href ?? `label-${index}`}>
-            <SectionLabel node={node} current={node.href === currentHref} />
-            {node.children.length > 0 && <PageList nodes={node.children} currentHref={currentHref} />}
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div className={rail ? RAIL : "px-6 pt-1 pb-8"}>
+      <DocsSearch variant="compact" className={rail ? "shrink-0 px-6 pt-6 pb-2" : "pb-6"} />
+      <nav
+        aria-label="Docs"
+        className={rail ? "docs-rail min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-4" : undefined}
+      >
+        <ul className="space-y-5">
+          {nav.map((node, index) => (
+            <li key={node.href ?? `label-${index}`}>
+              <SectionLabel node={node} current={node.href === currentHref} />
+              {node.children.length > 0 && <PageList nodes={node.children} currentHref={currentHref} />}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
   );
 }
 

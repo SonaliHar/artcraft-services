@@ -9,10 +9,23 @@ const FEEDBACK_MS = 1500;
 type CopyState = "idle" | "copied" | "failed";
 
 export interface CopyButtonProps
-  extends Omit<ButtonProps, "onClick" | "href" | "children"> {
-  value: string;
+  extends Omit<ButtonProps, "onClick" | "href" | "children" | "value"> {
+  /** Text to copy, or a function that loads it when the button is clicked. */
+  value: string | (() => Promise<string>);
   label?: string;
   copiedLabel?: string;
+}
+
+// Loaded text goes in as a pending ClipboardItem where supported, so Safari
+// still treats the write as part of the click; elsewhere it is written once
+// it arrives.
+async function writeClipboard(value: CopyButtonProps["value"]) {
+  if (typeof value === "string") return navigator.clipboard.writeText(value);
+  if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
+    const blob = value().then((text) => new Blob([text], { type: "text/plain" }));
+    return navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
+  }
+  return navigator.clipboard.writeText(await value());
 }
 
 // Button that writes `value` to the clipboard and confirms inline. The
@@ -29,7 +42,7 @@ export function CopyButton({
   async function copy() {
     let next: CopyState = "copied";
     try {
-      await navigator.clipboard.writeText(value);
+      await writeClipboard(value);
     } catch {
       next = "failed";
     }

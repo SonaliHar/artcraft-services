@@ -34,7 +34,14 @@ export type DocApp = {
   pages: DocPage[];
 };
 export type NavNode = { title: string; href?: string; children: NavNode[]; order: number };
-export type SearchEntry = { app: string; title: string; description: string; headings: string[]; href: string };
+export type SearchEntry = {
+  app: string;
+  title: string;
+  description: string;
+  headings: string[];
+  headingIds: string[];
+  href: string;
+};
 export type DocHeading = { depth: number; id: string; text: string };
 
 export { docHref, rawHref };

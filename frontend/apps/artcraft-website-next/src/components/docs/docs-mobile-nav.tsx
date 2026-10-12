@@ -31,7 +31,7 @@ export function DocsMenuDisclosure({
         </>
       }
     >
-      <DocsSidebar nav={nav} currentHref={currentHref} className="px-6 pt-2 pb-8" />
+      <DocsSidebar nav={nav} currentHref={currentHref} variant="menu" />
     </Disclosure>
   );
 }

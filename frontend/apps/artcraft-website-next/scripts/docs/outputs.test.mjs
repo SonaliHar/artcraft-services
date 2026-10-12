@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { llmsFull, llmsIndex, rawMarkdown, searchIndex } from "./outputs.mjs";
+import { renderDoc } from "./render.mjs";
 
 const app = {
   slug: "artcraft", name: "ArtCraft", repo: "storytold/artcraft", branch: "main", path: "docs/user", sha: null,
@@ -32,6 +33,35 @@ test("raw markdown starts with title and description", () => {
 
 test("search index carries headings and hrefs", () => {
   assert.deepEqual(searchIndex([app])[1], {
-    app: "ArtCraft", title: "Models", description: "All models.", headings: ["Image and video models"], href: "/docs/artcraft/reference/models",
+    app: "ArtCraft", title: "Models", description: "All models.",
+    headings: ["Image and video models"], headingIds: ["image-and-video-models"],
+    href: "/docs/artcraft/reference/models",
   });
+});
+
+test("search heading ids match the ids the page renders with", async () => {
+  const body = [
+    "## Run `artcraft --safe` from [the terminal](https://x.dev)",
+    "",
+    "```bash",
+    "## not a heading",
+    "```",
+    "",
+    "#### Deep **bold** note",
+    "",
+    "### Fix it",
+    "",
+    "## Fix it ##",
+    "",
+    "~~~",
+    "### also not a heading",
+    "~~~",
+  ].join("\n");
+  const page = { file: "a.md", urlPath: "a", title: "A", description: "", body };
+  const [entry] = searchIndex([{ ...app, pages: [page] }]);
+  assert.deepEqual(entry.headings, ["Run artcraft --safe from the terminal", "Fix it", "Fix it"]);
+
+  const { headings } = await renderDoc({ markdown: body, generated: {}, slug: "artcraft", file: "a.md", repo: "r/r", ref: "main", path: "docs" });
+  assert.deepEqual(entry.headingIds, headings.map((h) => h.id));
+  assert.deepEqual(entry.headingIds, ["run-artcraft---safe-from-the-terminal", "fix-it", "fix-it-1"]);
 });

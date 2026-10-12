@@ -6,6 +6,10 @@ import { SectionShell } from "@/components/landing/section-shell";
 import { ArticleBody } from "@/components/page/page-header";
 import DocsAppMark from "@/components/docs/docs-app-mark";
 import DocsBreadcrumbs, { type Crumb } from "@/components/docs/docs-breadcrumbs";
+import DocsCodeCopy from "@/components/docs/docs-code-copy";
+import DocsHeadingLinks from "@/components/docs/docs-heading-links";
+import DocsPageActions from "@/components/docs/docs-page-actions";
+import { siteUrl } from "@/lib/links";
 import { DocsMenuDisclosure, DocsTocDisclosure } from "@/components/docs/docs-mobile-nav";
 import DocsPager from "@/components/docs/docs-pager";
 import DocsSidebar from "@/components/docs/docs-sidebar";
@@ -98,6 +102,9 @@ export default async function DocsPage({ params }: { params: Params }) {
             {page.description && (
               <p className="mt-5 max-w-[62ch] text-lg [overflow-wrap:anywhere] leading-relaxed text-muted">{page.description}</p>
             )}
+            <div className="mt-8">
+              <DocsPageActions url={siteUrl(href)} markdownHref={rawHref(app.slug, page.file)} />
+            </div>
           </div>
           <dl className="hidden content-start gap-4 border-l border-line px-6 py-10 md:py-14 xl:grid">
             <div>
@@ -117,14 +124,16 @@ export default async function DocsPage({ params }: { params: Params }) {
       <SectionShell>
         <div className={`grid ${COLUMNS}`}>
           <aside className="hidden border-r border-line md:block">
-            <DocsSidebar nav={nav} currentHref={href} className={`${RAIL} docs-rail px-6 py-8`} />
+            <DocsSidebar nav={nav} currentHref={href} />
           </aside>
 
           <div className="min-w-0">
             <DocsMenuDisclosure nav={nav} currentHref={href} section={section} className="md:hidden" />
             <DocsTocDisclosure headings={headings} className="xl:hidden" />
-            <div className="docs-article">
+            <div className="docs-article relative">
               <ArticleBody html={html} />
+              <DocsHeadingLinks key={`links-${href}`} />
+              <DocsCodeCopy key={`code-${href}`} />
               <span id="docs-article-end" aria-hidden className="block h-px" />
               <footer className="hud-label flex flex-wrap gap-x-6 gap-y-2 px-6 pb-12 text-muted md:px-10">
                 <a href={docEditUrl(app, page)} className="hover:text-ink">Edit on GitHub</a>

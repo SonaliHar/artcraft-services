@@ -33,6 +33,12 @@ test("wraps tables in a labelled, focusable scroll region", async () => {
   assert.match(html, /<\/table><\/div>/);
 });
 
+test("wraps code blocks in a frame that carries the language", async () => {
+  const { html } = await render("```bash\necho hi\n```\n\n```\nplain\n```");
+  assert.match(html, /<div class="code-block" data-language="bash"><pre><code class="language-bash">echo hi\n<\/code><\/pre><\/div>/);
+  assert.match(html, /<div class="code-block"><pre><code>plain\n<\/code><\/pre><\/div>/);
+});
+
 test("renders GFM tables, code and generated content", async () => {
   const { html } = await render("## M\n\n<!-- generated:artcraft-models -->\n\n```bash\necho hi\n```", {
     generated: { "artcraft-models": "| Model |\n| --- |\n| Veo 3 |" },
