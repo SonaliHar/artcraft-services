@@ -690,8 +690,8 @@ export const CRAFTING_APPS: CraftApp[] = [
       {
         file: "hero.webp",
         source: "loopcraft-hero.png",
-        caption: "First Light — playlist and channel rack",
-        alt: "LoopCraft with its demo song open: the browser on the left, the playlist filling the workspace with coloured pattern clips across sixteen bars, and the channel rack with its step sequencer floating over it",
+        caption: "First Light — channel rack, mixer and playlist",
+        alt: "LoopCraft with its demo song open: the browser on the left, the channel rack above the mixer, and the playlist filling the right with coloured pattern clips across fourteen bars",
         wide: true,
       },
       {
@@ -711,8 +711,8 @@ export const CRAFTING_APPS: CraftApp[] = [
       {
         file: "instruments.webp",
         source: "instrument-and-mixer.png",
-        caption: "Instrument editor beside the channel rack",
-        alt: "LoopCraft's three-oscillator instrument editor, a grid of knobs for the oscillators, an envelope and a filter, floating beside the channel rack over the mixer",
+        caption: "Instrument editor over the playlist",
+        alt: "LoopCraft's three-oscillator instrument editor, a grid of knobs for the oscillators, an envelope and a filter, floating over the playlist beside the channel rack and mixer",
         wide: true,
       },
     ],
