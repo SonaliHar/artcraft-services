@@ -30,6 +30,7 @@ import { Button } from "@/components/ui";
 import {
   CRAFTING_APPS,
   craftAppIndex,
+  craftAppInLauncher,
   craftAppName,
   craftAppOgImage,
   craftAppPath,
@@ -85,8 +86,7 @@ export default async function CraftAppPage({ params }: { params: Params }) {
   const release = craftAppRelease(app);
   // The hero's download is ArtCraft Launcher, which installs this app and keeps
   // it updated; the app's own installers are in #get-it, under the launcher.
-  // An app with no release yet has nothing for the launcher to install.
-  const launcherDownloads = release ? craftLauncherRecommended() : [];
+  const launcherDownloads = craftAppInLauncher(app) ? craftLauncherRecommended() : [];
   const allLauncherDownloads = craftLauncherDownloads();
   const hasDownload = release !== null;
   const [hero] = app.shots;

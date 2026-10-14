@@ -86,6 +86,8 @@ export type CraftApp = {
   /** First shot is the hero. */
   shots: [CraftShot, ...CraftShot[]];
   demo?: CraftDemo;
+  /** False until ArtCraft Launcher's catalog lists this app. */
+  inLauncher?: false;
 };
 
 /** One release file, resolved to a URL for a specific app. */
@@ -663,6 +665,7 @@ export const CRAFTING_APPS: CraftApp[] = [
     schemaCategory: "MultimediaApplication",
     platforms: ["macOS", "Windows", "Linux"],
     rustVersion: "1.95",
+    inLauncher: false,
     features: [
       {
         title: "Step sequencer",
@@ -1187,6 +1190,11 @@ export function craftAppIconSourceUrl(app: CraftApp): string {
 
 export function craftAppRelease(app: CraftApp): CraftRelease | null {
   return CRAFT_APP_RELEASES[app.slug];
+}
+
+/** ArtCraft Launcher can install it: it is in the launcher's catalog and has a release. */
+export function craftAppInLauncher(app: CraftApp): boolean {
+  return app.inLauncher !== false && craftAppRelease(app) !== null;
 }
 
 export function craftReleaseTag(release: CraftRelease): string {

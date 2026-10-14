@@ -14,6 +14,7 @@ import {
   CRAFTING_APPS,
   craftAppBuildCommand,
   craftAppIndex,
+  craftAppInLauncher,
   craftAppName,
   craftAppRelease,
   craftAppRepo,
@@ -174,7 +175,7 @@ export function AppGetIt({ app, index }: { app: CraftApp; index: string }) {
       />
       {release && (
         <>
-          {CRAFT_LAUNCHER_RELEASE && (
+          {CRAFT_LAUNCHER_RELEASE && craftAppInLauncher(app) && (
             <>
               <LauncherCallout app={app} />
               <div data-reveal className="border-y border-line bg-bg p-6 md:p-10">
