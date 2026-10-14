@@ -69,7 +69,7 @@ export function AppDemo({
           <LazyVideo
             src={demo.src}
             poster={craftDemoPosterUrl(app, demo)}
-            label={demo.caption}
+            label={demo.alt}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </div>

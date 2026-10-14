@@ -63,6 +63,8 @@ export type CraftDemo = {
   headline: [before: string, accent: string, after: string];
   lede: string;
   caption: string;
+  /** What happens in the clip, for screen readers. */
+  alt: string;
 };
 
 export type CraftApp = {
@@ -647,6 +649,7 @@ export const CRAFTING_APPS: CraftApp[] = [
       headline: ["Design ", "together", ", in real time."],
       lede: "Host the open file from the app or a server of your own, share the invite link, and edit it together. Changes sync live with cursors, selections and cursor chat, and undo takes back only your own.",
       caption: "A host and a guest editing one file",
+      alt: "Two people editing one FigCraft file live: each sees the other's cursor, selection and edits land instantly, ending on the FigCraft end card.",
     },
   },
   {
@@ -716,6 +719,15 @@ export const CRAFTING_APPS: CraftApp[] = [
         wide: true,
       },
     ],
+    demo: {
+      src: "https://frontend-cdn.fakeyou.com/videos/loopcraft-overview-web.mp4",
+      poster: "overview-poster.webp",
+      label: "Make music",
+      headline: ["Make the ", "beat", "."],
+      lede: "Click in a groove, draw a melody, arrange the song and mix it, all in one native app on your own machine.",
+      caption: "The real app playing its demo song, First Light: step sequencer, piano roll, playlist and mixer",
+      alt: "LoopCraft in use. Steps are clicked into the channel rack and play, a clip opens in the piano roll and gets three new notes, then the whole song plays with the mixer's meters moving.",
+    },
   },
   {
     slug: "wordcraft",
