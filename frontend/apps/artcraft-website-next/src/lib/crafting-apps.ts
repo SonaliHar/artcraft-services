@@ -720,7 +720,7 @@ export const CRAFTING_APPS: CraftApp[] = [
       },
     ],
     demo: {
-      src: "https://frontend-cdn.fakeyou.com/videos/loopcraft-overview-web.mp4",
+      src: "https://frontend-cdn.fakeyou.com/videos/loopcraft-overview-v2-web.mp4",
       poster: "overview-poster.webp",
       label: "Make music",
       headline: ["Make the ", "beat", "."],
