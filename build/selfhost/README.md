@@ -56,7 +56,12 @@ by FAL (with the public keys FAL publishes at
 don't verify, `report` (the default) logs them and accepts them, and `off`
 skips the check.
 
-Provider webhooks, such as `FAL_WEBHOOK_URL`, must be reachable from the
+FAL results also arrive without a reachable webhook: a recovery thread polls FAL
+for requests whose webhook hasn't arrived. `.env.example` sets
+`FAL_WEBHOOK_RECOVERY_AFTER_SECS=30`, so it starts looking 30 seconds after a
+request is submitted (see `_database/sql/fal_queue_requests.md`).
+
+Other provider webhooks, such as Beeble's, must be reachable from the
 internet for asynchronous generation results to arrive.
 
 ## Database migrations
