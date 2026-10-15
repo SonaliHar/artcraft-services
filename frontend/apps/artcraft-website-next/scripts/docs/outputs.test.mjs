@@ -40,6 +40,13 @@ test("raw markdown starts with title and description", () => {
   assert.equal(rawMarkdown(app, app.pages[0], {}), "# Home\n\n> Start here.\n\n## Hi\n");
 });
 
+test("raw markdown and llms-full.txt carry the version each page was checked against", () => {
+  const checked = { file: "guides/cull.md", urlPath: "guides/cull", title: "Cull", description: "Pick keepers.", verified: "0.7.1", body: "## Flag photos\n" };
+  const withChecked = { ...app, pages: [checked] };
+  assert.equal(rawMarkdown(withChecked, checked, {}), "# Cull\n\n> Pick keepers.\n\nChecked against: v0.7.1\n\n## Flag photos\n");
+  assert.match(llmsFull(withChecked, {}, SITE), /^> Pick keepers\.\n\nChecked against: v0\.7\.1\n\n## Flag photos$/m);
+});
+
 test("search index carries headings and hrefs", () => {
   assert.deepEqual(searchIndex([app])[1], {
     app: "ArtCraft", title: "Models", description: "All models.",

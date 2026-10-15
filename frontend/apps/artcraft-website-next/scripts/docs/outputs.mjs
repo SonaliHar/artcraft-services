@@ -9,6 +9,10 @@ const byFile = (app) => [...app.pages].sort((a, b) => a.file.localeCompare(b.fil
 // break the link (backslashes first, so existing escapes stay literal).
 const linkText = (title) => title.replace(/[\\[\]]/g, "\\$&");
 
+// The release a page was checked against, as the page footer shows it. Agents
+// read only these text outputs, so it has to travel with each page.
+const checkedLine = (page) => (page.verified ? `Checked against: v${page.verified}` : null);
+
 export function llmsIndex(apps, siteUrl) {
   const lines = [
     "# Craft docs",
@@ -36,6 +40,7 @@ export function llmsFull(app, generated, siteUrl) {
       `# ${page.title}`, "",
       `URL: ${siteUrl}${docHref(app.slug, page.urlPath)}`, "",
       `> ${page.description}`, "",
+      ...(checkedLine(page) ? [checkedLine(page), ""] : []),
       expandGenerated(page.body, generated).trim(), "",
     );
   }
@@ -45,7 +50,8 @@ export function llmsFull(app, generated, siteUrl) {
 // Relative links stay as written: the raw URL mirrors the file path, so
 // "../guides/a.md" resolves to the target's raw URL.
 export function rawMarkdown(app, page, generated) {
-  return `# ${page.title}\n\n> ${page.description}\n\n${expandGenerated(page.body, generated)}`;
+  const checked = checkedLine(page) ? `${checkedLine(page)}\n\n` : "";
+  return `# ${page.title}\n\n> ${page.description}\n\n${checked}${expandGenerated(page.body, generated)}`;
 }
 
 // Heading ids come from the page renderer's own pipeline (pageHeadings), so
