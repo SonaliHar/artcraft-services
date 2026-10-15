@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { DOC_SOURCES, docsCacheDir } from "./scripts/docs/sources.mjs";
+import { docsRedirects, loadDocApps } from "./scripts/docs/load.mjs";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -14,6 +16,9 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   async redirects() {
     return [
+      // Docs pages that moved keep their old URLs (`redirect_from` in each
+      // page's frontmatter). Read from the cache fetch-docs.mjs filled.
+      ...docsRedirects(loadDocApps(docsCacheDir(), DOC_SOURCES)),
       // Legacy Stripe return paths from the Vite site; checkout now lives in
       // the webapp, which serves the canonical slash forms.
       ...["checkout_success", "checkout_cancel", "portal_closed"].map(
@@ -60,6 +65,8 @@ const nextConfig: NextConfig = {
   // clips use a same-origin proxy. Other marketing media lives in public/.
   async rewrites() {
     return [
+      // Raw Markdown for every docs page: /docs/<app>/<file>.md.
+      { source: "/docs/:app/:file(.+\\.md)", destination: "/docs-raw/:app/:file" },
       // Showcase clips for the hero wall (see cdnMediaUrl in lib/links.ts).
       {
         source: "/cdn-media/:path*",

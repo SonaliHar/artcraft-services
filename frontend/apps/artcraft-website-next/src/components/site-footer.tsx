@@ -27,6 +27,7 @@ const LINK_COLUMNS: {
   {
     heading: "Resources",
     links: [
+      { name: "Docs", href: "/docs" },
       { name: "Tutorials", href: "/tutorials" },
       { name: "News", href: "/news" },
       { name: "FAQ", href: "/faq" },

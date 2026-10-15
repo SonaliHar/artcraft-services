@@ -276,6 +276,18 @@ html[data-ruler="on"]::-webkit-scrollbar {
   height: 0;
 }
 
+/* Docs keep clear of the ruler. Elsewhere content may flow under the frosted
+   rail, but docs carry right-aligned counts, the "On this page" rail and
+   long reading lines. While the ruler is mounted, the docs sections' 1280px
+   rail shrinks so it ends a gap short of the ruler on both sides (the ruler
+   can sit on either). At 1440 and up nothing changes: the 1280 rail already
+   clears it. */
+@media (min-width: 1024px) {
+  html[data-ruler] .docs-ruler-safe > div {
+    max-width: min(1280px, calc(100vw - 2 * (var(--ruler-rail, 60px) + 1rem)));
+  }
+}
+
 /* Rolling odometer for the ruler's percent readout. Digit columns translate
    by whole digits; the reduced-motion blanket below disables the roll. */
 .ruler-digits {
@@ -513,6 +525,328 @@ html[data-ruler="on"]::-webkit-scrollbar {
   width: 100%;
   height: auto;
   max-height: 70vh;
+}
+/* Docs reading surface. Everything below is scoped to .docs-article so the
+   FAQ, news and tutorials keep the shared .article-content look. The column
+   holds ~72 characters of body text, left-aligned against the sidebar rail. */
+.docs-article .article-content {
+  max-width: calc(72ch + 5rem);
+  margin-inline: 0;
+  line-height: 1.7;
+}
+@media (max-width: 767px) {
+  .docs-article .article-content {
+    padding-top: 2.25rem;
+  }
+}
+.docs-article .article-content p {
+  margin: 0.875rem 0;
+}
+/* A page that opens on a section heading doesn't need a rule under the
+   section frame's own top rule. */
+.docs-article .article-content > h2:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.docs-article .article-content ul > li::before {
+  color: var(--line-strong);
+}
+/* Inside a Craft app's docs (an .app-<slug> ancestor) links take the app's
+   AA text shade; elsewhere --app-ink is unset and they stay the site blue. */
+.docs-article .article-content a {
+  color: var(--app-ink, var(--accent-ink));
+}
+.docs-article .article-content hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* Numbered steps: a mono numeral in a hairline cell, joined to the next step
+   by a thin rail. 3rem of indent fits two-digit steps (10+) without
+   crowding the text. */
+.docs-article .article-content ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 1.5rem 0;
+  counter-reset: step;
+}
+.docs-article .article-content ol > li {
+  counter-increment: step;
+  position: relative;
+  min-height: 1.875rem;
+  padding-left: 3rem;
+  margin-bottom: 1.125rem;
+}
+.docs-article .article-content ol > li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  top: 0.1875rem;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  /* 25px, not 24: the digits' ink is an odd number of pixels tall, so an
+     even box always leaves them a pixel high or low. */
+  height: 1.5625rem;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-raised);
+  color: var(--ink-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  /* Tracking also adds space after the last digit, which pulled the pair
+     left of centre. Matching left padding puts it back (text-indent has no
+     effect in a flex box). Measured centred to 1/3px at 3x for 01-12. */
+  letter-spacing: 0.06em;
+  padding-left: 0.06em;
+  line-height: 1;
+}
+.docs-article .article-content ol > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 1.75rem;
+  bottom: calc(-1.125rem - 0.1875rem);
+  left: 1rem;
+  width: 1px;
+  background: var(--line);
+}
+.docs-article .article-content li > p:first-child {
+  margin-top: 0;
+}
+
+/* Notes: blockquotes read as hairline callouts with a mono label, not the
+   serif pull-quote the marketing articles use. */
+.docs-article .article-content blockquote {
+  margin: 1.75rem 0;
+  padding: 0.875rem 1.25rem 1rem;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--app-ink, var(--accent));
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 1rem;
+}
+.docs-article .article-content blockquote::before {
+  content: "Note";
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--app-ink, var(--accent-ink));
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.docs-article .article-content blockquote > p {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+}
+.docs-article .article-content blockquote > :first-child {
+  margin-top: 0;
+}
+
+/* Code in the site's mono. Long tokens (env vars, paths) wrap rather than
+   push the page sideways on phones. */
+.docs-article .article-content code {
+  font-size: 0.84em;
+  padding: 0.1em 0.35em;
+  color: var(--ink-strong);
+  overflow-wrap: anywhere;
+}
+.docs-article .article-content pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+/* Repeats the shared reset: the docs inline-code rule above would otherwise
+   pad and box the code inside every block. */
+.docs-article .article-content pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: inherit;
+  overflow-wrap: normal;
+}
+
+/* Code block frame (added at render). The copy button sits in the top-right
+   corner over the block, outside the scrolling <pre>. Idle, the corner shows
+   the fence language as a faint HUD label; hover or keyboard focus swaps it
+   for the button. Touch screens have no hover, so the button stays. */
+.docs-article .article-content .code-block {
+  position: relative;
+  margin: 1.5rem 0;
+}
+.docs-article .article-content .code-block > pre {
+  margin: 0;
+}
+.docs-article .article-content .code-block[data-language]::after {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  line-height: 1.5rem;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.docs-article .article-content .code-copy {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.docs-article .article-content .code-block:is(:hover, :focus-within) .code-copy {
+  opacity: 1;
+}
+.docs-article .article-content .code-block[data-copy]:is(:hover, :focus-within)::after {
+  opacity: 0;
+}
+@media (hover: none), (pointer: coarse) {
+  .docs-article .article-content .code-copy {
+    opacity: 1;
+  }
+  .docs-article .article-content .code-block[data-copy]::after {
+    opacity: 0;
+  }
+  /* A strip above the first line, so the always-on button never covers
+     code. */
+  .docs-article .article-content .code-block[data-copy] > pre {
+    padding-top: 2.75rem;
+  }
+}
+
+/* Tables: the wrapper (added at render) scrolls sideways so the table keeps
+   its semantics. Mono uppercase headers, hairline rows, no vertical rules. */
+.docs-article .article-content .table-scroll {
+  margin: 1.75rem 0;
+  overflow-x: auto;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+.docs-article .article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.docs-article .article-content th {
+  padding: 0.75rem 1rem 0.625rem 0;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.docs-article .article-content td {
+  padding: 0.625rem 1rem 0.625rem 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.docs-article .article-content tr:last-child td {
+  border-bottom: 0;
+}
+.docs-article .article-content td:first-child {
+  min-width: 9rem;
+  color: var(--ink-strong);
+  font-weight: 500;
+}
+
+/* Focus rings inside the scrolling rails sit inset so overflow can't clip
+   them. */
+.docs-rail a:focus-visible {
+  outline-offset: -2px;
+}
+/* A long rail fades out at the bottom edge instead of cutting a line in
+   half; the bottom padding keeps the last entry clear of the fade. */
+.docs-rail {
+  padding-bottom: 3rem;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent);
+}
+.docs-article .article-content :is(h2, h3) {
+  scroll-margin-top: 5rem;
+}
+.docs-article .article-content .heading-anchor {
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0 0.15em;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms, color 120ms;
+}
+.docs-article .article-content :is(h2, h3):hover .heading-anchor,
+.docs-article .article-content .heading-anchor:focus-visible {
+  opacity: 1;
+}
+.docs-article .article-content .heading-anchor:hover {
+  color: var(--app-ink, var(--accent-ink));
+}
+/* No hover on touch screens: the anchor is always there, quieter, with a
+   finger-sized hit area. */
+@media (hover: none), (pointer: coarse) {
+  .docs-article .article-content .heading-anchor {
+    opacity: 0.7;
+    padding: 0.2em 0.45em;
+    margin: -0.2em 0 -0.2em 0.1em;
+  }
+}
+
+/* "Link copied" next to a section anchor. Positioned by the page script;
+   always in the tree as a live region, shown only while it has text. */
+.docs-copied {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  background: var(--invert-bg);
+  color: var(--invert-fg);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-0.25rem, -50%);
+  transition: opacity 140ms, transform 140ms;
+}
+.docs-copied[data-above] {
+  transform: translateY(-100%);
+}
+.docs-copied[data-show] {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+.docs-copied[data-show][data-above] {
+  transform: translateY(-100%);
+}
+.docs-copied:empty {
+  padding: 0;
+}
+
+/* Matched query words in search results. */
+.docs-mark {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--ink-strong);
+  box-shadow: 0 1px 0 var(--accent);
 }
 
 /* Mono capability marquee. Duplicated track scrolls -50%; the reduced-motion
