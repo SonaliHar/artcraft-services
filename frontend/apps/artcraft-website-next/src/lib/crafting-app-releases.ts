@@ -208,23 +208,23 @@ export function craftRelease(
 // every app above, and the /apps pages recommend it first. Its releases ship
 // the same file set minus the macOS CLI, named artcraft-launcher-*.
 export const CRAFT_LAUNCHER_RELEASE: CraftRelease | null = craftRelease(
-  "0.3.2",
+  "0.4.1",
   CRAFT_RELEASE_ASSETS.filter((asset) => !asset.file.startsWith("{slug}-cli-")),
 );
 
 // Every app must be listed, so a new slug fails the type check until it is.
 export const CRAFT_APP_RELEASES: Record<CraftAppSlug, CraftRelease | null> = {
-  photocraft: craftRelease("0.7.0"),
-  vectorcraft: craftRelease("0.9.0"),
-  filmcraft: craftRelease("0.6.0"),
-  lightcraft: craftRelease("0.6.0"),
-  pdfcraft: craftRelease("0.6.0"),
-  effectcraft: craftRelease("0.8.0"),
-  designcraft: craftRelease("0.6.0"),
-  figcraft: craftRelease("0.5.1"),
-  wordcraft: craftRelease("0.5.0"),
-  soundcraft: craftRelease("0.5.0"),
-  deckcraft: craftRelease("0.5.0"),
-  cadcraft: craftRelease("0.5.0"),
-  gridcraft: craftRelease("0.5.0"),
+  photocraft: craftRelease("0.9.0"),
+  vectorcraft: craftRelease("0.12.0"),
+  filmcraft: craftRelease("0.8.0"),
+  lightcraft: craftRelease("0.8.0"),
+  pdfcraft: craftRelease("0.8.0"),
+  effectcraft: craftRelease("0.10.0"),
+  designcraft: craftRelease("0.8.0"),
+  figcraft: craftRelease("0.6.0"),
+  wordcraft: craftRelease("0.7.0"),
+  soundcraft: craftRelease("0.7.0"),
+  deckcraft: craftRelease("0.7.0"),
+  cadcraft: craftRelease("0.7.0"),
+  gridcraft: craftRelease("0.7.0"),
 };

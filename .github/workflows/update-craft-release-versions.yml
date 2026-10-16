@@ -1,0 +1,174 @@
+
+name: Update Craft Release Versions
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-craft-release-versions
+  cancel-in-progress: false
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check latest tags and update versions
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+
+            const owner = "storytold";
+            const file =
+              "frontend/apps/artcraft-website-next/src/lib/crafting-app-releases.ts";
+
+            const apps = [
+              "photocraft",
+              "vectorcraft",
+              "filmcraft",
+              "lightcraft",
+              "pdfcraft",
+              "effectcraft",
+              "designcraft",
+              "figcraft",
+              "wordcraft",
+              "soundcraft",
+              "deckcraft",
+              "cadcraft",
+              "gridcraft",
+            ];
+
+            const launcher = {
+              repo: "craft-launcher",
+              key: "CRAFT_LAUNCHER_RELEASE",
+            };
+
+            function parseVersion(tag) {
+              const match = tag.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+              if (!match) return null;
+
+              return {
+                text: `${match[1]}.${match[2]}.${match[3]}`,
+                parts: match.slice(1).map(Number),
+              };
+            }
+
+            function compareVersions(a, b) {
+              for (let i = 0; i < 3; i++) {
+                if (a.parts[i] !== b.parts[i]) {
+                  return a.parts[i] - b.parts[i];
+                }
+              }
+              return 0;
+            }
+
+            async function latestVersion(repo) {
+              const tags = await github.paginate(
+                github.rest.repos.listTags,
+                {
+                  owner,
+                  repo,
+                  per_page: 100,
+                }
+              );
+
+              const versions = tags
+                .map(tag => parseVersion(tag.name))
+                .filter(Boolean)
+                .sort(compareVersions);
+
+              if (versions.length === 0) {
+                throw new Error(
+                  `No stable X.Y.Z version tags found for ${owner}/${repo}`
+                );
+              }
+
+              const latest = versions[versions.length - 1];
+
+              core.info(`${repo}: ${latest.text}`);
+              return latest.text;
+            }
+
+            let content = fs.readFileSync(file, "utf8");
+
+            // Update the launcher version.
+            const launcherVersion = await latestVersion(launcher.repo);
+
+            const launcherPattern =
+              /(export const CRAFT_LAUNCHER_RELEASE:[\s\S]*?=\s*craftRelease\(\s*)"[^"]+"/;
+
+            if (!launcherPattern.test(content)) {
+              throw new Error("Could not find the launcher version.");
+            }
+
+            content = content.replace(
+              launcherPattern,
+              (_, prefix) => `${prefix}"${launcherVersion}"`
+            );
+
+            // Update each app version.
+            for (const app of apps) {
+              const version = await latestVersion(app);
+
+              const escaped = app.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+              );
+
+              const pattern = new RegExp(
+                `(^\\s*${escaped}:\\s*craftRelease\\()"[^"]+"`,
+                "m"
+              );
+
+              if (!pattern.test(content)) {
+                throw new Error(
+                  `Could not find the release entry for ${app}.`
+                );
+              }
+
+              content = content.replace(
+                pattern,
+                (_, prefix) => `${prefix}"${version}"`
+              );
+            }
+
+            fs.writeFileSync(file, content);
+
+            core.info("Release versions updated successfully.");
+
+      - name: Create or update pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/update-craft-release-versions
+          delete-branch: true
+          commit-message: "chore: update Craft release versions"
+          title: "chore: update Craft Launcher and app release versions"
+          body: |
+            ## Summary
+
+            Automatically synchronize the Craft Launcher and Crafting Apps
+            versions with the latest stable semantic-version tags in their
+            respective GitHub repositories.
+
+            ## Changes
+
+            - Update the launcher version.
+            - Update all Crafting Apps release versions.
+            - Keep the existing release asset configuration unchanged.
+
+            Generated by the `Update Craft Release Versions` workflow.
+          labels: |
+            automated
+            dependencies
