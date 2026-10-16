@@ -19,27 +19,28 @@ export default function MotionProvider({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (prefersReducedMotion) return;
+    const mm = gsap.matchMedia();
+    // Match the reveal runtime: a system preference change must also stop
+    // smooth scrolling without requiring a reload or a route change.
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const lenis = new Lenis({
+        lerp: 0.12,
+        anchors: true,
+      });
+      lenisRef.current = lenis;
 
-    const lenis = new Lenis({
-      lerp: 0.12,
-      anchors: true,
+      lenis.on("scroll", ScrollTrigger.update);
+      const tick = (time: number) => lenis.raf(time * 1000);
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+
+      return () => {
+        gsap.ticker.remove(tick);
+        lenisRef.current = null;
+        lenis.destroy();
+      };
     });
-    lenisRef.current = lenis;
-
-    lenis.on("scroll", ScrollTrigger.update);
-    const tick = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
-
-    return () => {
-      gsap.ticker.remove(tick);
-      lenisRef.current = null;
-      lenis.destroy();
-    };
+    return () => mm.revert();
   }, []);
 
   return (
